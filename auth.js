@@ -39,7 +39,7 @@ function accountEmail(value) {
 
 function showGate(message = '') {
   document.body.classList.add('auth-open');
-  const parentNotice = isParentPage ? '<p class="notice">首次登入請使用教師提供的預設密碼 <b>00000000</b>。登入後系統會請您立即設定自己的新密碼。<br><a class="auth-inline" href="parent-guide.html">查看家長端使用說明</a></p>' : '';
+  const parentNotice = isParentPage ? '<p class="notice">首次登入請使用教師提供的預設密碼 <b>00000000</b>。登入後系統會請您立即設定自己的新密碼。<br><a class="auth-inline" href="/parent-guide">查看家長端使用說明</a></p>' : '';
   document.body.insertAdjacentHTML('beforeend', `<div id="authGate"><form class="auth-card" id="authForm"><h1>${isParentPage ? '家長端登入' : '教師端登入'}</h1><p>請使用系統建立的手機帳號與密碼登入。</p>${parentNotice}<label for="authPhone">手機號碼</label><input id="authPhone" inputmode="tel" autocomplete="username" placeholder="09xxxxxxxx" required><label for="authPassword">密碼</label><input id="authPassword" type="password" autocomplete="current-password" required><button type="submit">登入</button><div class="error" id="authError">${message}</div></form></div>`);
   document.getElementById('authForm').addEventListener('submit', async event => {
     event.preventDefault();
