@@ -24,7 +24,7 @@
 - 教師檔案中心：`addTeacherFileCenter` / `#fileStudent`（學生清單從 `#workStudent` 複製，會重試填充）。
 - 教師通知鈴鐺：`refreshBell`；家長通知：`startParentBell` / `enableTabNotices`。
 - **分頁整併（重要）**：教師端已無獨立「兼職薪資」「收入分析」分頁。導覽只剩 首頁／課次與月曆／學生課務／檔案中心／學費與收入／學習狀況／家長端預覽／個人課表／新增·管理行程。
-  - **首頁（`#home` / `renderHome`）＝工作與收入儀表板**：月份 chips 下方動態建立品牌紅金 `.exec-board`，上層顯示總收入、總工作時數（家教＋兼職＋`salary_details[月].workHours` 正職工時）、完成課次／班次、全收入平均時薪與服務學生數；下層顯示接下來三筆行程及本月課務／正職薪資待處理提醒。其後保留原收入來源占比、排行、近 12 月趨勢、迷你月曆、每日收入與今天課程等分析卡。
+  - **首頁（`#home` / `renderHome`）＝工作與收入儀表板**：月份 chips 下方動態建立品牌紅金 `.exec-board`，上層顯示總收入、總工作時數、完成課次／班次、全收入平均時薪與服務學生數。總工時＝家教＋兼職＋正職；正職預設按該月週一至週五工作天數 × 8 小時計算，若 `salary_details[月].workHours` 有實填值則覆蓋。下層顯示接下來三筆行程及本月課務／正職薪資待處理提醒。其後保留原收入來源占比、排行、近 12 月趨勢、迷你月曆、每日收入與今天課程等分析卡。
   - **學費與收入（`#finance` / `renderFinance`）**：家教學費彙總 + 併入兼職（`#employerForm`/`#shiftForm`/薪資對帳單 `#statementEmployer`·`#statementMonth`·`#printStatement`）與正職薪資（Gemini 卡片）與 `#incomeStatMetrics`。三大類收入用可開合 `<details class="acc">` 分區（家教／兼職／正職，家教預設展開）；summary 留在正常文件流中，以免修改表單自動捲動時覆蓋文字，標題右側顯示當月金額（`#accTutSum`/`#accShfSum`/`#accSalSum`，於 `renderFinance` 內填）。
 - 兼職薪資：`wLoad` / `wRender` / `wRenderStatement`（對帳單：應領薪資 − 勞保自付 − 健保自付 = 實領＋核章欄）。資料表 `employers`(含 `default_rate`/`labor_insurance`/`health_insurance`)、`work_shifts`。UI 卡片現位於學費與收入分頁。
 - 收入分析：`renderIncomeStats`（家教＋兼職＋正職三來源；helper `shiftFee`=兼職毛額、`salaryFee`=正職實領）。填的元素散在首頁（趨勢/占比/結構/各補習班）與學費頁（`#incomeStatMetrics`），全部以 `if($(...))` 防呆。
