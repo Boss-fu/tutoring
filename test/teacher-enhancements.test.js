@@ -75,5 +75,9 @@ check('薪資分析結果可收合總覽並展開全部明細',
   html.includes('salary-editor-head') && html.includes('salary-editor-body') &&
   html.includes('展開所有明細') && html.includes('收起，只看總薪資') &&
   html.includes('showSalaryEditor(false)'));
+check('薪資卡收合時仍可直接永久儲存',
+  html.includes('saveSalaryTop') &&
+  html.includes("$('saveSalaryTop').onclick=()=>$('saveSalary').click()") &&
+  html.includes("' 正職收入與明細'"));
 
 if (failed) process.exit(1);
