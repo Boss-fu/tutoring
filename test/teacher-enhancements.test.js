@@ -62,6 +62,10 @@ check('正職薪資可查看歷史月份並修改',
 check('舊正職收入也可補齊明細且支援多行分析結果',
   html.includes('...Object.keys(incomeMap)') &&
   html.includes('舊資料，可修改補齊明細') &&
-  html.includes("source.lastIndexOf('}')") && html.includes('日期／時數／單價'));
+  html.includes("source.lastIndexOf('}')") && html.includes('日期與時數、時薪、合計'));
+check('正職薪資分列授課紀錄與其他薪資資訊',
+  html.includes('salaryWorkDetails') && html.includes('salaryBenefits') &&
+  html.includes('workDetails:parseWork') && html.includes('benefits:parseBenefits') &&
+  html.includes('授課與家教詳細紀錄') && html.includes('扣款合計'));
 
 if (failed) process.exit(1);
