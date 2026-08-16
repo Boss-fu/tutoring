@@ -89,7 +89,10 @@ check('首頁提供完整工作儀表板與待處理提醒',
   html.includes('接下來的行程') && html.includes('本月待處理'));
 check('首頁總工時包含每月正職工時',
   html.includes('salaryWorkHours') && html.includes('workHours:Number(salaryWorkHoursEl.value') &&
-  html.includes('fulltimeHours=Number(salaryDetails[month]?.workHours') &&
+  html.includes('savedFulltimeHours=Number(salaryDetails[month]?.workHours') &&
   html.includes('家教 ${tutHours}h・兼職 ${shiftHours}h・正職 ${fulltimeHours}h'));
+check('正職工時預設為平日工作天乘以八小時',
+  html.includes('fulltimeWorkdays++') && html.includes('fulltimeWorkdays*8') &&
+  html.includes('工作天 × 8h') && html.includes('空白時自動以平日工作天 × 8 小時計算'));
 
 if (failed) process.exit(1);
