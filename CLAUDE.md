@@ -4,7 +4,7 @@
 
 ## 部署與網址
 - 正式站（給家長/老師用）：**Vercel** `https://bossfu-tutoring.vercel.app`（`main` 一 push 自動部署）。備援：GitHub Pages `https://boss-fu.github.io/tutoring/`（不讀 `vercel.json`，根目錄永遠是 `index.html`）。
-- 路由由 `vercel.json` 控制：`/`→`/home`（選擇頁）；`/teacher`、`/parent`、`/parents`。
+- 路由由 `vercel.json` 控制：`/`→`/home`（選擇頁）；`/teacher`、`/parent`、`/parents`；`/parent-guide` 為家長端網頁使用說明書。
 - 開發分支固定：`claude/through-this-5f7djl`。PR 合併進 `main` 才會上線。
 
 ## 檔案角色
@@ -12,6 +12,7 @@
 - `index.html`：個人班表引擎；被 `teacher.html` 以 iframe (`?embed=teacher`) 嵌入。**勿刪、勿改成別的頁**。
 - `teacher.html`：教師端（DB 版）。單檔多個 `<script type="module">`，各自建 `window.BOSSFU_DB`。
 - `parent.html`：家長端登入外殼，登入後 iframe 嵌 `parent-preview.html`。
+- `parent-guide.html`：給家長閱讀的響應式使用說明書；登入畫面的「查看家長端使用說明」連至 `/parent-guide`，說明書中的返回按鈕固定回到 `/parent`。
 - `parent-preview.html`：家長端**實際內容**（月曆/課務/學費單/親師溝通/檔案中心），也被教師端「家長端預覽」嵌用。
 - `theme.css`：共用設計主題（品牌色 `--tzu-red:#850103`）。
 - `supabase-config.js`：`window.SUPABASE_CONFIG`（url + publishable key）。
