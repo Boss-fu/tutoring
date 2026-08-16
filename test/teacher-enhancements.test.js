@@ -98,5 +98,11 @@ check('AI 依薪資表調整加班缺曠與特殊假日工時',
   html.includes('workHoursNote') && html.includes('固定休假日是每週五與每週日') &&
   html.includes('加上實際加班時數、扣除缺曠／缺時') &&
   html.includes('國定假日、颱風假、補班或其他特殊日'));
+check('Gmail 一鍵匯入沒有附件時不呼叫 AI',
+  html.includes('importGmailSalary') && html.includes("gmailInvoke({action:'import'") &&
+  html.includes("if(!found.found)") && html.includes('未使用 AI Token'));
+check('Gmail 找到薪資單後自動分析填表且防止重複',
+  html.includes('analyzeGmailAttachment(found)') && html.includes("action:'mark_imported'") &&
+  html.includes('bossfu-gmail-connected'));
 
 if (failed) process.exit(1);
