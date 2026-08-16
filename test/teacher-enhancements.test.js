@@ -21,7 +21,9 @@ check('教師端個人課表提供 PDF 按鈕',
   html.includes('id="exportSchedulePdf"') && html.includes('frame.contentWindow.print()'));
 check('薪資對帳單只列印獨立內容',
   html.includes('function wPrintStatement()') &&
-  html.includes("article.outerHTML") &&
+  html.includes('兼職薪資對帳單') &&
+  html.includes('薪資核對說明') &&
+  html.includes('對帳單編號') &&
   html.includes("wq('printStatement').onclick=wPrintStatement") &&
   !html.includes("wq('printStatement').onclick=()=>window.print()"));
 
