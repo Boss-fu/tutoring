@@ -9,8 +9,14 @@ function check(name, condition) {
 }
 
 check('拖曳後顯示移動／複製選擇',
-  html.includes('mChooseAction(day.dataset.date)') &&
+  html.includes('mChooseAction(day.dataset.date,payload.kind)') &&
   html.includes('複製到新日期') && html.includes('移動到新日期'));
+check('兼職班次也能拖曳移動或複製',
+  html.includes('class="event shift" draggable="true"') &&
+  html.includes("async function mMoveShift(id,date)") &&
+  html.includes("async function mCopyShift(id,date)") &&
+  html.includes("payload.kind==='shift'") &&
+  html.includes("kind:ev.dataset.shift?'shift':'lesson'"));
 check('兼職單位與班次都有修改入口',
   html.includes('data-edit-employer') && html.includes('data-edit-shift'));
 check('修改單位時同步既有班次時薪',
