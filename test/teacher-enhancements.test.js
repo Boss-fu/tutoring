@@ -56,5 +56,8 @@ check('首頁同時顯示授課與兼職時數',
 check('正職薪資保存完整應發與扣款明細',
   html.includes('salary_details') && html.includes('salaryEarnings') &&
   html.includes('salaryDeductions') && html.includes('薪資明細JSON'));
+check('正職薪資可查看歷史月份並修改',
+  html.includes('salaryDetailMonth') && html.includes('修改此月明細') &&
+  html.includes("salaryEditMonth||curMonth()") && html.includes('正在修改 '));
 
 if (failed) process.exit(1);
