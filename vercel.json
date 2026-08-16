@@ -6,6 +6,7 @@
     { "source": "/home", "destination": "/home.html" },
     { "source": "/teacher", "destination": "/teacher.html" },
     { "source": "/parent", "destination": "/parent.html" },
+    { "source": "/parent-guide", "destination": "/parent-guide.html" },
     { "source": "/parents", "destination": "/parent.html" }
   ]
 }
