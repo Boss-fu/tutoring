@@ -104,5 +104,11 @@ check('Gmail 一鍵匯入沒有附件時不呼叫 AI',
 check('Gmail 找到薪資單後自動分析填表且防止重複',
   html.includes('analyzeGmailAttachment(found)') && html.includes("action:'mark_imported'") &&
   html.includes('bossfu-gmail-connected'));
+check('教師分頁可長按後拖曳排序並記住順序',
+  html.includes("NAV_ORDER_KEY='bossfu-teacher-nav-order-v1'") &&
+  html.includes('function setupNavOrder()') && html.includes('setTimeout(()=>') &&
+  html.includes('order-editing') && html.includes('order-dragging') &&
+  html.includes("localStorage.setItem(NAV_ORDER_KEY") &&
+  html.includes('✓ 完成排序'));
 
 if (failed) process.exit(1);
