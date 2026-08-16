@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gmail 授權｜福大自然家教</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#f6f8fb;color:#1f2937;font-family:system-ui,"Noto Sans TC",sans-serif}.card{width:min(440px,100%);padding:34px;border:1px solid #dfe5ee;border-radius:20px;background:#fff;box-shadow:0 18px 48px #1f293718;text-align:center}.icon{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 18px;border-radius:50%;background:#eaf8f0;color:#087a45;font-size:34px}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#64748b;line-height:1.7}.error .icon{background:#fff0f0;color:#b00000}.error h1{color:#9b0000}
+  </style>
+</head>
+<body>
+  <main class="card" id="card">
+    <div class="icon" id="icon">✓</div>
+    <h1 id="title">Gmail 已成功連結</h1>
+    <p id="message">系統將繼續尋找薪資單，這個視窗即將自動關閉。</p>
+  </main>
+  <script>
+    const ok=new URLSearchParams(location.search).get('status')==='success';
+    if(!ok){document.getElementById('card').classList.add('error');document.getElementById('icon').textContent='!';document.getElementById('title').textContent='Gmail 連結失敗';document.getElementById('message').textContent='授權已過期，請關閉視窗後回到系統重試。'}
+    if(ok&&window.opener)window.opener.postMessage({type:'bossfu-gmail-connected'},location.origin);
+    if(ok)setTimeout(()=>window.close(),900);
+  </script>
+</body>
+</html>

@@ -20,13 +20,13 @@ Deno.serve(async req=>{
     if(url.searchParams.get('callback')==='1'){
       const state=url.searchParams.get('state')||'',code=url.searchParams.get('code')||''
       const {data:row}=await service.from('gmail_oauth_states').select('*').eq('state',state).gt('expires_at',new Date().toISOString()).maybeSingle()
-      if(!row||!code)return new Response('<h1>Gmail 連結失敗</h1><p>授權已過期，請回到系統重試。</p>',{status:400,headers:{'Content-Type':'text/html; charset=utf-8'}})
+      if(!row||!code)return Response.redirect('https://bossfu-tutoring.vercel.app/gmail-connected.html?status=error',302)
       const redirect=env('GMAIL_OAUTH_REDIRECT_URI'),tokens=await tokenRequest({code,client_id:env('GMAIL_CLIENT_ID'),client_secret:env('GMAIL_CLIENT_SECRET'),redirect_uri:redirect,grant_type:'authorization_code'})
       if(!tokens.refresh_token)throw new Error('Google 未回傳 refresh token，請撤銷舊授權後重試。')
       const profile=await gmail(tokens.access_token,'profile')
       await service.from('gmail_payroll_connections').upsert({user_id:row.user_id,refresh_token_encrypted:await encrypt(tokens.refresh_token),gmail_address:profile.emailAddress,updated_at:new Date().toISOString()})
       await service.from('gmail_oauth_states').delete().eq('state',state)
-      return new Response('<!doctype html><meta charset="utf-8"><title>Gmail 已連結</title><body style="font-family:system-ui;text-align:center;padding:40px"><h1>Gmail 已連結</h1><p>視窗即將關閉，系統會繼續匯入薪資單。</p><script>window.opener&&window.opener.postMessage({type:"bossfu-gmail-connected"},"*");setTimeout(()=>window.close(),700)</script></body>',{headers:{'Content-Type':'text/html; charset=utf-8'}})
+      return Response.redirect('https://bossfu-tutoring.vercel.app/gmail-connected.html?status=success',302)
     }
     const auth=req.headers.get('Authorization')||'',userClient=createClient(env('SUPABASE_URL'),env('SUPABASE_ANON_KEY'),{global:{headers:{Authorization:auth}}}),{data:{user}}=await userClient.auth.getUser()
     if(!user)return json({error:'unauthorized'},401)
