@@ -31,7 +31,8 @@ check('月曆兼職班次可展開完整明細',
   html.includes('calendarShiftDetail') &&
   html.includes('兼職班次明細') &&
   html.includes("closest('.event[data-shift]')") &&
-  html.includes('本次金額'));
+  html.includes('<th>開始</th><th>結束</th><th>時數</th><th>時薪</th><th>本次金額</th><th>備註</th>') &&
+  !html.includes('<span>兼職單位</span>'));
 check('月曆圖例顯示實際兼職單位名稱',
   html.includes('const shiftEmployers=') &&
   html.includes("w.employers?.name||'未命名兼職單位'") &&
