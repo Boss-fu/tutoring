@@ -62,10 +62,18 @@ check('正職薪資可查看歷史月份並修改',
 check('舊正職收入也可補齊明細且支援多行分析結果',
   html.includes('...Object.keys(incomeMap)') &&
   html.includes('舊資料，可修改補齊明細') &&
-  html.includes("source.lastIndexOf('}')") && html.includes('日期與時數、時薪、合計'));
+  html.includes("source.lastIndexOf('}')") && html.includes('上課日期與時數、時薪及該組小計'));
 check('正職薪資分列授課紀錄與其他薪資資訊',
   html.includes('salaryWorkDetails') && html.includes('salaryBenefits') &&
   html.includes('workDetails:parseWork') && html.includes('benefits:parseBenefits') &&
   html.includes('授課與家教詳細紀錄') && html.includes('扣款合計'));
+check('薪資單可用外部 AI App 分析後匯入',
+  html.includes('複製通用 Prompt') && html.includes('salaryExternalResult') &&
+  html.includes('importSalaryResult') && html.includes('navigator.clipboard.writeText') &&
+  html.includes('ChatGPT、Gemini 或 Claude'));
+check('薪資分析結果可收合總覽並展開全部明細',
+  html.includes('salary-editor-head') && html.includes('salary-editor-body') &&
+  html.includes('展開所有明細') && html.includes('收起，只看總薪資') &&
+  html.includes('showSalaryEditor(false)'));
 
 if (failed) process.exit(1);
