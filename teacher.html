@@ -784,7 +784,7 @@ if(keyEl){
   const grossEl=$('salaryGross'),earningsEl=$('salaryEarnings'),deductionsEl=$('salaryDeductions'),savedEl=$('salarySavedDetail');
   let salaryDetailMap={},salaryEditMonth='';
   const parseLines=value=>String(value||'').split(/\n+/).map(line=>{const p=line.split(/[=＝:：]/);return{name:(p.shift()||'').trim(),amount:Number((p.join('').match(/-?[0-9][0-9,]*/)||['0'])[0].replace(/,/g,''))}}).filter(x=>x.name);
-  const linesText=list=>(list||[]).map(x=>String(x.name||'項目')+'='+Number(x.amount||0)).join('\n');
+  const linesText=list=>(list||[]).map(x=>String(x.name||'項目')+(x.detail?'（'+x.detail+'）':'')+'='+Number(x.amount||0)).join('\n');
   const salaryMoney=n=>'NT$ '+Number(n||0).toLocaleString('zh-TW');
   async function renderSavedSalary(requestedMonth){const db=window.BOSSFU_DB;if(!db||!savedEl)return;const{data}=await db.from('site_settings').select('value').eq('key','salary_details').maybeSingle();salaryDetailMap=(data&&data.value)||{};const months=Array.from(new Set([curMonth(),...Object.keys(salaryDetailMap)])).sort().reverse(),month=requestedMonth||salaryEditMonth||curMonth(),d=salaryDetailMap[month],picker='<div class="filters no-print"><label>薪資月份<select id="salaryDetailMonth">'+months.map(m=>'<option value="'+m+'"'+(m===month?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+(d?'<button class="btn" id="editSalaryDetail" type="button">修改此月明細</button>':'')+'</div>';const block=(title,list)=>'<section class="salary-lines"><h3>'+title+'</h3>'+((list||[]).length?(list||[]).map(x=>'<div class="salary-line"><span>'+String(x.name||'項目').replace(/[<>&]/g,'')+'</span><b>'+salaryMoney(x.amount)+'</b></div>').join(''):'<div class="salary-line"><span>無項目</span><b>—</b></div>')+'</section>';savedEl.innerHTML='<h2>正職薪資明細</h2>'+picker+(d?'<p class="muted">'+month+'　應發總額 '+salaryMoney(d.gross)+'，扣除項目後的實領如下。</p><div class="salary-detail-grid">'+block('應發項目',d.earnings)+block('扣款項目',d.deductions)+'</div><div class="salary-total"><span>'+month+' 實領</span><b>'+salaryMoney(d.net)+'</b></div>':'<p class="empty">'+month+' 尚無正職薪資明細，上傳薪資單分析後即可建立。</p>');const pickerEl=$('salaryDetailMonth');if(pickerEl)pickerEl.onchange=()=>{salaryEditMonth=pickerEl.value;renderSavedSalary(pickerEl.value)};const editBtn=$('editSalaryDetail');if(editBtn)editBtn.onclick=()=>{salaryEditMonth=month;grossEl.value=Number(d.gross||0);amountEl.value=Number(d.net||0);earningsEl.value=linesText(d.earnings);deductionsEl.value=linesText(d.deductions);resultEl.style.display='';tgtEl.textContent=month;statusEl.textContent='正在修改 '+month+' 的薪資明細，確認後請按儲存。';resultEl.scrollIntoView({behavior:'smooth',block:'start'})}}
   keyEl.value=localStorage.getItem('bossfu-gemini-key')||'';
@@ -792,6 +792,20 @@ if(keyEl){
   keyEl.addEventListener('change',()=>localStorage.setItem('bossfu-gemini-key',keyEl.value.trim()));
   modelEl.addEventListener('change',()=>localStorage.setItem('bossfu-gemini-model',modelEl.value.trim()));
   const curMonth=()=> (window.BOSSFU_SHOWN_MONTH?window.BOSSFU_SHOWN_MONTH():new Date().toISOString().slice(0,7));
+  const safeSalaryText=value=>String(value||'').replace(/[<>&]/g,'');
+  const extractSalaryDetail=txt=>{const marker=txt.indexOf('薪資明細JSON');const source=marker>=0?txt.slice(marker):txt;const start=source.indexOf('{'),end=source.lastIndexOf('}');if(start<0||end<=start)return null;try{return JSON.parse(source.slice(start,end+1))}catch(_){return null}};
+  renderSavedSalary=async requestedMonth=>{
+    const db=window.BOSSFU_DB;if(!db||!savedEl)return;
+    const [{data:details},{data:incomes}]=await Promise.all([db.from('site_settings').select('value').eq('key','salary_details').maybeSingle(),db.from('site_settings').select('value').eq('key','salary_income').maybeSingle()]);
+    salaryDetailMap=(details&&details.value)||{};const incomeMap=(incomes&&incomes.value)||{};
+    const months=Array.from(new Set([curMonth(),...Object.keys(incomeMap),...Object.keys(salaryDetailMap)])).sort().reverse();
+    const month=requestedMonth||salaryEditMonth||curMonth(),saved=salaryDetailMap[month],legacy=Number(incomeMap[month]||0),d=saved||(legacy?{gross:legacy,net:legacy,earnings:[{name:'正職薪資（舊資料，可修改補齊明細）',amount:legacy}],deductions:[]}:null);
+    const picker='<div class="filters no-print"><label>薪資月份<select id="salaryDetailMonth">'+months.map(m=>'<option value="'+m+'"'+(m===month?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+(d?'<button class="btn" id="editSalaryDetail" type="button">修改此月收入與明細</button>':'')+'</div>';
+    const block=(title,list)=>'<section class="salary-lines"><h3>'+title+'</h3>'+((list||[]).length?(list||[]).map(x=>'<div class="salary-line"><span>'+safeSalaryText(x.name||'項目')+(x.detail?' <small class="muted">'+safeSalaryText(x.detail)+'</small>':'')+'</span><b>'+salaryMoney(x.amount)+'</b></div>').join(''):'<div class="salary-line"><span>無項目</span><b>—</b></div>')+'</section>';
+    savedEl.innerHTML='<h2>正職薪資明細</h2>'+picker+(d?'<p class="muted">'+month+'　應發總額 '+salaryMoney(d.gross)+'，扣除項目後的實領如下。</p><div class="salary-detail-grid">'+block('應發項目',d.earnings)+block('扣款項目',d.deductions)+'</div><div class="salary-total"><span>'+month+' 實領</span><b>'+salaryMoney(d.net)+'</b></div>':'<p class="empty">'+month+' 尚無正職薪資明細，上傳薪資單分析後即可建立。</p>');
+    const pickerEl=$('salaryDetailMonth');if(pickerEl)pickerEl.onchange=()=>{salaryEditMonth=pickerEl.value;tgtEl.textContent=pickerEl.value;renderSavedSalary(pickerEl.value)};
+    const editBtn=$('editSalaryDetail');if(editBtn)editBtn.onclick=()=>{salaryEditMonth=month;grossEl.value=Number(d.gross||d.net||0);amountEl.value=Number(d.net||0);earningsEl.value=linesText(d.earnings);deductionsEl.value=linesText(d.deductions);resultEl.style.display='';tgtEl.textContent=month;$('saveSalary').textContent='儲存 '+month+' 正職收入與明細';statusEl.textContent='正在修改 '+month+'，可直接調整每個項目與金額。';resultEl.scrollIntoView({behavior:'smooth',block:'start'})};
+  };
   const showMonth=()=>{if(tgtEl)tgtEl.textContent=curMonth();};
   showMonth();
   setTimeout(renderSavedSalary,0);
@@ -805,13 +819,13 @@ if(keyEl){
     statusEl.textContent='分析中…';resultEl.style.display='none';
     try{
       const b64=await fileToB64(file);const mime=file.type||'application/pdf';
-      const prompt='這是一份台灣的每月薪資單（PDF 或照片）。請完整辨識所有應發薪資項目與所有扣款項目，不要只找實領。最後獨立一行輸出：薪資明細JSON={"gross":應發總額純數字,"net":實領純數字,"earnings":[{"name":"項目名稱","amount":金額}],"deductions":[{"name":"項目名稱","amount":金額}]}。沒有的項目用空陣列，不確定的數字填0；JSON前可用一到兩句中文說明。';
+      const prompt='這是一份台灣的每月薪資單（PDF 或照片）。請像正式薪資明細表一樣，逐筆辨識所有應發與扣款，不能只回傳實領。加班、代課、鐘點或活動等若有日期、時數、時薪，請保留在 detail；同名但不同日期也要分列。只輸出：薪資明細JSON={"gross":應發總額純數字,"net":實領純數字,"earnings":[{"name":"項目名稱","detail":"日期／時數／單價等原單據資訊","amount":金額}],"deductions":[{"name":"項目名稱","detail":"計算方式或說明","amount":金額}]}。沒有的項目用空陣列，不確定的數字填0。';
       const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}]})});
       const j=await r.json();
       if(!r.ok){statusEl.textContent='Gemini 錯誤：'+((j.error&&j.error.message)||r.status);return;}
       const txt=((((j.candidates||[])[0]||{}).content||{}).parts||[]).map(p=>p.text||'').join('\n').trim();
       rawEl.textContent=txt||'（無回應內容）';
-      const jm=txt.match(/薪資明細JSON\s*[=＝:：]\s*(\{[^\n]+\})/);let detail=null;try{detail=jm?JSON.parse(jm[1]):null}catch(_){detail=null}const m=txt.match(/實領\s*[=＝:：]?\s*([0-9][0-9,]*)/);
+      const detail=extractSalaryDetail(txt),m=txt.match(/實領\s*[=＝:：]?\s*([0-9][0-9,]*)/);
       amountEl.value=detail?Number(detail.net||0):(m?m[1].replace(/,/g,''):'');grossEl.value=detail?Number(detail.gross||0):'';earningsEl.value=linesText(detail&&detail.earnings);deductionsEl.value=linesText(detail&&detail.deductions);
       resultEl.style.display='';
       statusEl.textContent=amountEl.value?('已讀到完整薪資明細，請確認後儲存。'):'無法自動判讀明細，請看原文手動填入。';
