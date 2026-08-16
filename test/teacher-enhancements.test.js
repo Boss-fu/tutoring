@@ -83,5 +83,9 @@ check('正職薪資可獨立預覽並另存 PDF',
   html.includes('printSalaryDetail') && html.includes('printFulltimeSalary') &&
   html.includes('正職薪資明細_') && html.includes('@page{size:A4;margin:12mm}') &&
   html.includes('預覽／存 PDF'));
+check('首頁提供完整工作儀表板與待處理提醒',
+  html.includes('dashExecutive') && html.includes('MONTHLY WORK OVERVIEW') &&
+  html.includes('總工作時數') && html.includes('工作平均時薪') &&
+  html.includes('接下來的行程') && html.includes('本月待處理'));
 
 if (failed) process.exit(1);
