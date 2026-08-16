@@ -30,6 +30,8 @@ check('月曆兼職班次可展開完整明細',
   html.includes('function wShowCalendarShift(id)') &&
   html.includes('calendarShiftDetail') &&
   html.includes('兼職班次明細') &&
+  html.includes('String(x.id)===String(id)') &&
+  html.includes('找不到這筆兼職班次') &&
   html.includes("closest('.event[data-shift]')") &&
   html.includes('<th>開始</th><th>結束</th><th>時數</th><th>時薪</th><th>本次金額</th><th>備註</th>') &&
   !html.includes('<span>兼職單位</span>'));
