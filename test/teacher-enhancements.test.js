@@ -87,5 +87,9 @@ check('首頁提供完整工作儀表板與待處理提醒',
   html.includes('dashExecutive') && html.includes('MONTHLY WORK OVERVIEW') &&
   html.includes('總工作時數') && html.includes('工作平均時薪') &&
   html.includes('接下來的行程') && html.includes('本月待處理'));
+check('首頁總工時包含每月正職工時',
+  html.includes('salaryWorkHours') && html.includes('workHours:Number(salaryWorkHoursEl.value') &&
+  html.includes('fulltimeHours=Number(salaryDetails[month]?.workHours') &&
+  html.includes('家教 ${tutHours}h・兼職 ${shiftHours}h・正職 ${fulltimeHours}h'));
 
 if (failed) process.exit(1);
