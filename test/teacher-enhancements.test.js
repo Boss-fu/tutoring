@@ -51,5 +51,10 @@ check('月曆圖例顯示實際兼職單位名稱',
 check('學費與收入展開標題不再覆蓋表單文字',
   html.includes('position:relative;top:auto;background:var(--surface);z-index:1') &&
   !html.includes('position:sticky;top:76px;background:var(--surface);z-index:5'));
+check('首頁同時顯示授課與兼職時數',
+  html.includes('家教授課時數') && html.includes('兼職班次時數'));
+check('正職薪資保存完整應發與扣款明細',
+  html.includes('salary_details') && html.includes('salaryEarnings') &&
+  html.includes('salaryDeductions') && html.includes('薪資明細JSON'));
 
 if (failed) process.exit(1);
