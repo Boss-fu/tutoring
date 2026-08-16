@@ -93,6 +93,10 @@ check('首頁總工時包含每月正職工時',
   html.includes('家教 ${tutHours}h・兼職 ${shiftHours}h・正職 ${fulltimeHours}h'));
 check('正職工時預設為平日工作天乘以八小時',
   html.includes('fulltimeWorkdays++') && html.includes('fulltimeWorkdays*8') &&
-  html.includes('工作天 × 8h') && html.includes('空白時自動以平日工作天 × 8 小時計算'));
+  html.includes('扣除五、日休假') && html.includes('空白時自動扣除每週五、日後 × 8 小時計算'));
+check('AI 依薪資表調整加班缺曠與特殊假日工時',
+  html.includes('workHoursNote') && html.includes('固定休假日是每週五與每週日') &&
+  html.includes('加上實際加班時數、扣除缺曠／缺時') &&
+  html.includes('國定假日、颱風假、補班或其他特殊日'));
 
 if (failed) process.exit(1);
