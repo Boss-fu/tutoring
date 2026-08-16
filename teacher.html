@@ -125,7 +125,7 @@
       margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm)}
     .acc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
       gap:10px;padding:15px 18px;font-size:16px;font-weight:800;color:var(--text);
-      position:sticky;top:76px;background:var(--surface);z-index:5}
+      position:relative;top:auto;background:var(--surface);z-index:1}
     .acc>summary::-webkit-details-marker{display:none}
     .acc>summary:hover{background:var(--surface-2)}
     .acc>summary .lead{display:flex;align-items:center;gap:10px;min-width:0}
@@ -135,7 +135,7 @@
     .acc[open]>summary .chev{transform:rotate(180deg)}
     .acc-body{padding:14px 14px 2px}
     .acc-body>.card{box-shadow:none;border-color:var(--line-soft)}
-    @media (max-width:720px){.acc>summary{top:0;font-size:15px}}
+    @media (max-width:720px){.acc>summary{font-size:15px}}
 
     /* ===== 月曆 ===== */
     .calendar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
