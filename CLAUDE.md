@@ -33,7 +33,7 @@
 - 兼職修改：單位與班次清單皆提供「修改」。更新單位預設時薪時，會同步更新該單位所有既有 `work_shifts.rate`；單筆班次仍可再獨立修改日期、時間、時數、時薪與備註。薪資對帳單的單位／月份會可靠地選取第一個有效值並顯示明確空狀態。
 - 月曆兼職明細：點擊 `.event[data-shift]` 會由 `wShowCalendarShift` 在月曆卡片下方建立 `#calendarShiftDetail`；單位名稱只作為明細標題，選取的班次以表格列出日期、開始、結束、時數、時薪、本次金額與備註，並可收起。
 - 月曆兼職圖例：`renderCalendarLegend` 會依顯示月份彙整 `work_shifts.employers.name`，逐一顯示實際兼職單位名稱，不使用籠統的「兼職班次」。
-- 兼職薪資對帳單列印：`wPrintStatement` 會依目前單位／月份重新產生完整 A4 正式文件（品牌抬頭、單據編號、結算資訊、摘要、班次表、扣款結算、核對聲明、簽章與頁尾），不會列印整個學費與收入頁面。
+- 兼職薪資對帳單列印：`wPrintStatement` 會依目前單位／月份重新產生完整 A4 正式文件（品牌抬頭、單據編號、結算資訊、摘要、班次表、扣款結算、核對聲明、簽章與頁尾），不會列印整個學費與收入頁面。列印視窗另注入四周 `7mm` 內安全邊距，搭配原有 `@page` 邊界，避免品牌文字與頁尾貼齊紙張或遭印表機裁切。
 - 個人課表 PDF：教師端 `#schedule` 會加入 `#exportSchedulePdf`，呼叫嵌入的 `index.html` 列印版面，讓使用者從系統列印視窗另存 PDF 分享。
 - 新增課次預填：`LESSON_DEFAULTS_KEY` / `lessonDefaults` / `rememberLesson`。表單輸入會保存在目前瀏覽器；下次新增時優先沿用上次輸入，若尚無本機紀錄則取該學生最近一堂課。日期固定使用今天，周考成績不沿用，避免誤植。
 - 推播通知：`pwa.js` 的 `subscribePush` / `window.bossfuPush(ids,…)` / `bossfuPushRole('teacher',…)`；Edge Function `supabase/functions/send-push`（用 VAPID 密鑰）；`sw.js` 的 push/notificationclick。觸發點：開立學費單、老師傳檔/回饋、家長回饋。

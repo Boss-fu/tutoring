@@ -24,7 +24,7 @@ check('薪資對帳單只列印獨立內容',
   html.includes('兼職薪資對帳單') &&
   html.includes('薪資核對說明') &&
   html.includes('對帳單編號') &&
-  html.includes("wq('printStatement').onclick=wPrintStatement") &&
+  html.includes("safeStyle.textContent='body{padding:7mm!important}.sheet{min-height:245mm!important}'") &&
   !html.includes("wq('printStatement').onclick=()=>window.print()"));
 check('月曆兼職班次可展開完整明細',
   html.includes('function wShowCalendarShift(id)') &&
