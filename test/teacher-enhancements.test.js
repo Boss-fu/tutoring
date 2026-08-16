@@ -27,7 +27,9 @@ check('薪資對帳單只列印獨立內容',
   html.includes("safeStyle.textContent='body{padding:7mm!important}.sheet{min-height:245mm!important}'") &&
   !html.includes("wq('printStatement').onclick=()=>window.print()"));
 check('月曆兼職班次可展開完整明細',
-  html.includes('function wShowCalendarShift(id)') &&
+  html.includes('function showMainCalendarShift(id)') &&
+  html.includes('workShifts.find(x=>String(x.id)===String(id))') &&
+  html.includes('e.stopImmediatePropagation();showMainCalendarShift') &&
   html.includes('calendarShiftDetail') &&
   html.includes('兼職班次明細') &&
   html.includes('String(x.id)===String(id)') &&

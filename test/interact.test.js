@@ -22,9 +22,12 @@ const LESSONS = [
     topic: '國八理化', progress: '浮力', homework: '', quiz_scope: '', quiz_score: '',
     teacher_observation: '', next_exam: '' },
 ];
+const EMPLOYERS = [{ id: 7, name: '諾貝爾全科精修班', default_rate: 300, labor_insurance: 0, health_insurance: 259 }];
+const WORK_SHIFTS = [{ id: 101, employer_id: 7, employers: { name: '諾貝爾全科精修班' }, work_date: '2026-08-07',
+  start_time: '13:30:00', end_time: '16:30:00', hours: 3, rate: 300, note: '國中自然' }];
 const SESSION = { access_token: 'x', refresh_token: 'y', user: { id: 'u1' } };
 
-const data = n => n === 'students' ? STUDENTS : n === 'lessons' ? LESSONS : [];
+const data = n => n === 'students' ? STUDENTS : n === 'lessons' ? LESSONS : n === 'employers' ? EMPLOYERS : n === 'work_shifts' ? WORK_SHIFTS : [];
 const q = n => { const o = {
   select: () => o, order: () => o, eq: () => o, in: () => o, limit: () => o,
   insert: () => Promise.resolve({ data: null, error: null }), update: () => o, delete: () => o,
@@ -104,6 +107,28 @@ const check = (name, cond, extra='') => {
   check('日期預設為今天(本地)', /^\d{4}-\d{2}-\d{2}$/.test($('formDate').value), $('formDate').value);
   check('學生下拉已填入', $('formStudent').options.length === 2, `${$('formStudent').options.length} 筆`);
   check('時薪以 50 元為級距', $('formRate').step === '50', `step=${$('formRate').step}`);
+
+  $('formStart').value = '18:30';
+  $('formEnd').value = '20:00';
+  $('formHours').value = '1.5';
+  $('formRate').value = '950';
+  $('formTopic').value = '先前輸入的課程';
+  $('formTopic').dispatchEvent(new win.Event('input', { bubbles:true }));
+  $('closeEditor').dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
+  cta.dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
+  await new Promise(r => setTimeout(r, 80));
+  check('新增課次沿用先前時間與時數', $('formStart').value === '18:30' && $('formEnd').value === '20:00' && $('formHours').value === '1.5');
+  check('新增課次沿用先前時薪與主題', $('formRate').value === '950' && $('formTopic').value === '先前輸入的課程');
+  check('沿用資料時日期仍預設今天', /^\d{4}-\d{2}-\d{2}$/.test($('formDate').value));
+
+  console.log('\n=== 月曆兼職班次明細 ===');
+  const shiftEvent = doc.querySelector('.event[data-shift="101"]');
+  check('月曆有數字 ID 的兼職班次', !!shiftEvent);
+  shiftEvent?.dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
+  await new Promise(r => setTimeout(r, 80));
+  const shiftDetail = $('calendarShiftDetail');
+  check('點擊後在月曆下方建立班次明細', !!shiftDetail);
+  check('班次明細顯示時間、金額與備註', shiftDetail?.textContent.includes('13:30') && shiftDetail?.textContent.includes('16:30') && shiftDetail?.textContent.includes('NT$ 900') && shiftDetail?.textContent.includes('國中自然'));
 
   // open an existing lesson that is 請假 -> status must round-trip
   const editBtn = doc.querySelector('[data-id="l2"]');
