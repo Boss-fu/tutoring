@@ -31,7 +31,7 @@
 - 正職薪資單分析（Gemini，UI 在學費與收入分頁，程式為 teacher.html 尾端獨立 module）：上傳薪資單 PDF → 用使用者自己的 Gemini API（`generativelanguage.googleapis.com/.../{model}:generateContent`，`inline_data` 傳 base64 PDF／照片，`accept="application/pdf,image/*"`、mime 取 `file.type`）判讀「實領」→ regex `實領=數字` 自動填 `#salaryAmount` →「存本月正職收入」寫進 `site_settings` key `salary_income`（JSON `{月份:金額}`，`onConflict:'key'`）。金鑰/模型只存 localStorage（`bossfu-gemini-key`/`bossfu-gemini-model`，預設 `gemini-2.5-flash`）。月份取自 `window.BOSSFU_SHOWN_MONTH()`；存完呼叫 `window.BOSSFU_RELOAD()`。主模組 `salaryMap`＋`salaryFee` 讀此值。
 - 月曆拖曳／複製：teacher.html 尾端模組 `mMove`(搬移) / `mCopy`(複製)；月曆格帶 `data-date`、課次事件 `draggable`；拖放到其他日期後由 `mChooseAction` 對話框明確選擇「移動／複製／取消」，不會直接改動資料；主模組重載入口 `window.BOSSFU_RELOAD`（兼職/拖曳更動後連動刷新）。
 - 兼職修改：單位與班次清單皆提供「修改」。更新單位預設時薪時，會同步更新該單位所有既有 `work_shifts.rate`；單筆班次仍可再獨立修改日期、時間、時數、時薪與備註。薪資對帳單的單位／月份會可靠地選取第一個有效值並顯示明確空狀態。
-- 月曆兼職明細：點擊 `.event[data-shift]` 會由 `wShowCalendarShift` 在月曆卡片下方建立 `#calendarShiftDetail`；班次 ID 轉為字串後比對（相容資料庫數字 ID 與 DOM 字串），找不到資料時會明確提示。單位名稱只作為明細標題，選取的班次以表格列出日期、開始、結束、時數、時薪、本次金額與備註，並可收起。
+- 月曆兼職明細：點擊 `.event[data-shift]` 由月曆主模組的 `showMainCalendarShift` 直接使用繪製事件的同一份 `workShifts`，不依賴兼職表單模組的非同步資料副本；事件會停止後續重複處理。班次 ID 轉為字串後比對，單位名稱只作為標題，選取班次以表格列出日期、開始、結束、時數、時薪、本次金額與備註，並可收起。
 - 月曆兼職圖例：`renderCalendarLegend` 會依顯示月份彙整 `work_shifts.employers.name`，逐一顯示實際兼職單位名稱，不使用籠統的「兼職班次」。
 - 兼職薪資對帳單列印：`wPrintStatement` 會依目前單位／月份重新產生完整 A4 正式文件（品牌抬頭、單據編號、結算資訊、摘要、班次表、扣款結算、核對聲明、簽章與頁尾），不會列印整個學費與收入頁面。列印視窗另注入四周 `7mm` 內安全邊距，搭配原有 `@page` 邊界，避免品牌文字與頁尾貼齊紙張或遭印表機裁切。
 - 個人課表 PDF：教師端 `#schedule` 會加入 `#exportSchedulePdf`，呼叫嵌入的 `index.html` 列印版面，讓使用者從系統列印視窗另存 PDF 分享。
