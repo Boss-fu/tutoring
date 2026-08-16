@@ -32,5 +32,10 @@ check('月曆兼職班次可展開完整明細',
   html.includes('兼職班次明細') &&
   html.includes("closest('.event[data-shift]')") &&
   html.includes('本次金額'));
+check('月曆圖例顯示實際兼職單位名稱',
+  html.includes('const shiftEmployers=') &&
+  html.includes("w.employers?.name||'未命名兼職單位'") &&
+  html.includes('🏫 ${esc(name)}') &&
+  !html.includes('🏫 兼職班次</span>'));
 
 if (failed) process.exit(1);
