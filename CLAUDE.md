@@ -32,6 +32,7 @@
 - 月曆拖曳／複製：teacher.html 尾端模組 `mMove`(搬移) / `mCopy`(複製)；月曆格帶 `data-date`、課次事件 `draggable`；拖放到其他日期後由 `mChooseAction` 對話框明確選擇「移動／複製／取消」，不會直接改動資料；主模組重載入口 `window.BOSSFU_RELOAD`（兼職/拖曳更動後連動刷新）。
 - 兼職修改：單位與班次清單皆提供「修改」。更新單位預設時薪時，會同步更新該單位所有既有 `work_shifts.rate`；單筆班次仍可再獨立修改日期、時間、時數、時薪與備註。薪資對帳單的單位／月份會可靠地選取第一個有效值並顯示明確空狀態。
 - 月曆兼職明細：點擊 `.event[data-shift]` 會由 `wShowCalendarShift` 在月曆卡片下方建立 `#calendarShiftDetail`，顯示單位、日期、工作時段、時數、時薪、本次金額與備註，並可收起。
+- 月曆兼職圖例：`renderCalendarLegend` 會依顯示月份彙整 `work_shifts.employers.name`，逐一顯示實際兼職單位名稱，不使用籠統的「兼職班次」。
 - 兼職薪資對帳單列印：`wPrintStatement` 會依目前單位／月份重新產生完整 A4 正式文件（品牌抬頭、單據編號、結算資訊、摘要、班次表、扣款結算、核對聲明、簽章與頁尾），不會列印整個學費與收入頁面。
 - 個人課表 PDF：教師端 `#schedule` 會加入 `#exportSchedulePdf`，呼叫嵌入的 `index.html` 列印版面，讓使用者從系統列印視窗另存 PDF 分享。
 - 新增課次預填：`LESSON_DEFAULTS_KEY` / `lessonDefaults` / `rememberLesson`。表單輸入會保存在目前瀏覽器；下次新增時優先沿用上次輸入，若尚無本機紀錄則取該學生最近一堂課。日期固定使用今天，周考成績不沿用，避免誤植。
