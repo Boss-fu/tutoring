@@ -782,10 +782,11 @@ if(keyEl){
   amountEl.closest('.formgrid').insertAdjacentHTML('beforeend','<label>應發項目（每行：名稱=金額）<textarea id="salaryEarnings" rows="6" placeholder="本薪=33000\n加班費=8375"></textarea></label><label>扣款項目（每行：名稱=金額）<textarea id="salaryDeductions" rows="6" placeholder="勞保=0\n健保=0"></textarea></label>');
   resultEl.closest('.card').insertAdjacentHTML('afterend','<div class="card" id="salarySavedDetail"><p class="empty">此月份尚無正職薪資明細。</p></div>');
   const grossEl=$('salaryGross'),earningsEl=$('salaryEarnings'),deductionsEl=$('salaryDeductions'),savedEl=$('salarySavedDetail');
+  let salaryDetailMap={},salaryEditMonth='';
   const parseLines=value=>String(value||'').split(/\n+/).map(line=>{const p=line.split(/[=＝:：]/);return{name:(p.shift()||'').trim(),amount:Number((p.join('').match(/-?[0-9][0-9,]*/)||['0'])[0].replace(/,/g,''))}}).filter(x=>x.name);
   const linesText=list=>(list||[]).map(x=>String(x.name||'項目')+'='+Number(x.amount||0)).join('\n');
   const salaryMoney=n=>'NT$ '+Number(n||0).toLocaleString('zh-TW');
-  async function renderSavedSalary(){const db=window.BOSSFU_DB;if(!db||!savedEl)return;const month=curMonth();const{data}=await db.from('site_settings').select('value').eq('key','salary_details').maybeSingle();const d=data&&data.value&&data.value[month];if(!d){savedEl.innerHTML='<h2>'+month+' 正職薪資明細</h2><p class="empty">此月份尚無正職薪資明細，上傳薪資單分析後即可建立。</p>';return}const block=(title,list)=>'<section class="salary-lines"><h3>'+title+'</h3>'+((list||[]).length?(list||[]).map(x=>'<div class="salary-line"><span>'+String(x.name||'項目').replace(/[<>&]/g,'')+'</span><b>'+salaryMoney(x.amount)+'</b></div>').join(''):'<div class="salary-line"><span>無項目</span><b>—</b></div>')+'</section>';savedEl.innerHTML='<h2>'+month+' 正職薪資明細</h2><p class="muted">應發總額 '+salaryMoney(d.gross)+'，扣除項目後的本月實領如下。</p><div class="salary-detail-grid">'+block('應發項目',d.earnings)+block('扣款項目',d.deductions)+'</div><div class="salary-total"><span>本月實領</span><b>'+salaryMoney(d.net)+'</b></div>'}
+  async function renderSavedSalary(requestedMonth){const db=window.BOSSFU_DB;if(!db||!savedEl)return;const{data}=await db.from('site_settings').select('value').eq('key','salary_details').maybeSingle();salaryDetailMap=(data&&data.value)||{};const months=Array.from(new Set([curMonth(),...Object.keys(salaryDetailMap)])).sort().reverse(),month=requestedMonth||salaryEditMonth||curMonth(),d=salaryDetailMap[month],picker='<div class="filters no-print"><label>薪資月份<select id="salaryDetailMonth">'+months.map(m=>'<option value="'+m+'"'+(m===month?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+(d?'<button class="btn" id="editSalaryDetail" type="button">修改此月明細</button>':'')+'</div>';const block=(title,list)=>'<section class="salary-lines"><h3>'+title+'</h3>'+((list||[]).length?(list||[]).map(x=>'<div class="salary-line"><span>'+String(x.name||'項目').replace(/[<>&]/g,'')+'</span><b>'+salaryMoney(x.amount)+'</b></div>').join(''):'<div class="salary-line"><span>無項目</span><b>—</b></div>')+'</section>';savedEl.innerHTML='<h2>正職薪資明細</h2>'+picker+(d?'<p class="muted">'+month+'　應發總額 '+salaryMoney(d.gross)+'，扣除項目後的實領如下。</p><div class="salary-detail-grid">'+block('應發項目',d.earnings)+block('扣款項目',d.deductions)+'</div><div class="salary-total"><span>'+month+' 實領</span><b>'+salaryMoney(d.net)+'</b></div>':'<p class="empty">'+month+' 尚無正職薪資明細，上傳薪資單分析後即可建立。</p>');const pickerEl=$('salaryDetailMonth');if(pickerEl)pickerEl.onchange=()=>{salaryEditMonth=pickerEl.value;renderSavedSalary(pickerEl.value)};const editBtn=$('editSalaryDetail');if(editBtn)editBtn.onclick=()=>{salaryEditMonth=month;grossEl.value=Number(d.gross||0);amountEl.value=Number(d.net||0);earningsEl.value=linesText(d.earnings);deductionsEl.value=linesText(d.deductions);resultEl.style.display='';tgtEl.textContent=month;statusEl.textContent='正在修改 '+month+' 的薪資明細，確認後請按儲存。';resultEl.scrollIntoView({behavior:'smooth',block:'start'})}}
   keyEl.value=localStorage.getItem('bossfu-gemini-key')||'';
   modelEl.value=localStorage.getItem('bossfu-gemini-model')||'gemini-2.5-flash';
   keyEl.addEventListener('change',()=>localStorage.setItem('bossfu-gemini-key',keyEl.value.trim()));
@@ -794,7 +795,7 @@ if(keyEl){
   const showMonth=()=>{if(tgtEl)tgtEl.textContent=curMonth();};
   showMonth();
   setTimeout(renderSavedSalary,0);
-  document.addEventListener('click',e=>{if(e.target&&e.target.closest&&(e.target.closest('[data-view]')||e.target.closest('[data-month]')||e.target.closest('.mchip')))setTimeout(()=>{showMonth();renderSavedSalary()},0);});
+  document.addEventListener('click',e=>{if(e.target&&e.target.closest&&(e.target.closest('[data-view]')||e.target.closest('[data-month]')||e.target.closest('.mchip')))setTimeout(()=>{salaryEditMonth='';showMonth();renderSavedSalary()},0);});
   const fileToB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});
   $('analyzeSalary').addEventListener('click',async()=>{
     const key=keyEl.value.trim();const model=(modelEl.value.trim()||'gemini-2.5-flash');const file=fileEl.files&&fileEl.files[0];
@@ -817,7 +818,7 @@ if(keyEl){
     }catch(err){statusEl.textContent='分析失敗：'+(err&&err.message||err);}
   });
   $('saveSalary').addEventListener('click',async()=>{
-    const db=window.BOSSFU_DB;const amt=Number(amountEl.value||0);const month=curMonth();
+    const db=window.BOSSFU_DB;const amt=Number(amountEl.value||0);const month=salaryEditMonth||curMonth();
     if(!db){statusEl.textContent='資料庫尚未就緒。';return;}
     if(!(amt>=0)||!amountEl.value){statusEl.textContent='請填入有效的實領金額。';return;}
     statusEl.textContent='儲存中…';
@@ -828,7 +829,7 @@ if(keyEl){
       if(error){statusEl.textContent='儲存失敗：'+error.message;return;}
       const{data:detailData}=await db.from('site_settings').select('value').eq('key','salary_details').maybeSingle();const detailMap=(detailData&&detailData.value)||{};detailMap[month]={gross:Number(grossEl.value||0),net:amt,earnings:parseLines(earningsEl.value),deductions:parseLines(deductionsEl.value)};const{error:detailError}=await db.from('site_settings').upsert({key:'salary_details',value:detailMap},{onConflict:'key'});if(detailError){statusEl.textContent='實領已儲存，但明細儲存失敗：'+detailError.message;return;}
       if(window.BOSSFU_RELOAD)await window.BOSSFU_RELOAD();
-      await renderSavedSalary();
+      salaryEditMonth=month;await renderSavedSalary(month);
       statusEl.textContent=month+' 正職收入已存為 '+amt.toLocaleString()+' 元。';
     }catch(err){statusEl.textContent='儲存失敗：'+(err&&err.message||err);}
   });
