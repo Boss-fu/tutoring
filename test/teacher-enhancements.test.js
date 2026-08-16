@@ -59,5 +59,9 @@ check('正職薪資保存完整應發與扣款明細',
 check('正職薪資可查看歷史月份並修改',
   html.includes('salaryDetailMonth') && html.includes('修改此月明細') &&
   html.includes("salaryEditMonth||curMonth()") && html.includes('正在修改 '));
+check('舊正職收入也可補齊明細且支援多行分析結果',
+  html.includes('...Object.keys(incomeMap)') &&
+  html.includes('舊資料，可修改補齊明細') &&
+  html.includes("source.lastIndexOf('}')") && html.includes('日期／時數／單價'));
 
 if (failed) process.exit(1);
