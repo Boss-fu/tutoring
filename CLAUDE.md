@@ -29,7 +29,7 @@
 - 兼職薪資：`wLoad` / `wRender` / `wRenderStatement`（對帳單：應領薪資 − 勞保自付 − 健保自付 = 實領＋核章欄）。資料表 `employers`(含 `default_rate`/`labor_insurance`/`health_insurance`)、`work_shifts`。UI 卡片現位於學費與收入分頁。
 - 收入分析：`renderIncomeStats`（家教＋兼職＋正職三來源；helper `shiftFee`=兼職毛額、`salaryFee`=正職實領）。填的元素散在首頁（趨勢/占比/結構/各補習班）與學費頁（`#incomeStatMetrics`），全部以 `if($(...))` 防呆。
 - 正職薪資單分析（Gemini，UI 在學費與收入分頁，程式為 teacher.html 尾端獨立 module）：上傳薪資單 PDF → 用使用者自己的 Gemini API（`generativelanguage.googleapis.com/.../{model}:generateContent`，`inline_data` 傳 base64 PDF／照片，`accept="application/pdf,image/*"`、mime 取 `file.type`）判讀「實領」→ regex `實領=數字` 自動填 `#salaryAmount` →「存本月正職收入」寫進 `site_settings` key `salary_income`（JSON `{月份:金額}`，`onConflict:'key'`）。金鑰/模型只存 localStorage（`bossfu-gemini-key`/`bossfu-gemini-model`，預設 `gemini-2.5-flash`）。月份取自 `window.BOSSFU_SHOWN_MONTH()`；存完呼叫 `window.BOSSFU_RELOAD()`。主模組 `salaryMap`＋`salaryFee` 讀此值。
-- 月曆拖曳／複製：teacher.html 尾端模組 `mMove`(搬移) / `mCopy`(複製)；月曆格帶 `data-date`、課次事件 `draggable`；拖放到其他日期後由 `mChooseAction` 對話框明確選擇「移動／複製／取消」，不會直接改動資料；主模組重載入口 `window.BOSSFU_RELOAD`（兼職/拖曳更動後連動刷新）。
+- 月曆拖曳／複製：teacher.html 尾端模組 `mMove`/`mCopy` 處理家教課次，`mMoveShift`/`mCopyShift` 處理兼職班次；兩種月曆事件皆為 `draggable`，拖曳 payload 帶 `kind` 與 `id`。拖放到其他日期後由 `mChooseAction` 依類型顯示對話框，明確選擇「移動／複製／取消」，不會直接改動資料；主模組重載入口 `window.BOSSFU_RELOAD`。
 - 兼職修改：單位與班次清單皆提供「修改」。更新單位預設時薪時，會同步更新該單位所有既有 `work_shifts.rate`；單筆班次仍可再獨立修改日期、時間、時數、時薪與備註。薪資對帳單的單位／月份會可靠地選取第一個有效值並顯示明確空狀態。
 - 月曆兼職明細：點擊 `.event[data-shift]` 由月曆主模組的 `showMainCalendarShift` 直接使用繪製事件的同一份 `workShifts`，不依賴兼職表單模組的非同步資料副本；事件會停止後續重複處理。班次 ID 轉為字串後比對，單位名稱只作為標題，選取班次以表格列出日期、開始、結束、時數、時薪、本次金額與備註，並可收起。
 - 月曆兼職圖例：`renderCalendarLegend` 會依顯示月份彙整 `work_shifts.employers.name`，逐一顯示實際兼職單位名稱，不使用籠統的「兼職班次」。
