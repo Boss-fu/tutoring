@@ -26,5 +26,11 @@ check('薪資對帳單只列印獨立內容',
   html.includes('對帳單編號') &&
   html.includes("wq('printStatement').onclick=wPrintStatement") &&
   !html.includes("wq('printStatement').onclick=()=>window.print()"));
+check('月曆兼職班次可展開完整明細',
+  html.includes('function wShowCalendarShift(id)') &&
+  html.includes('calendarShiftDetail') &&
+  html.includes('兼職班次明細') &&
+  html.includes("closest('.event[data-shift]')") &&
+  html.includes('本次金額'));
 
 if (failed) process.exit(1);
