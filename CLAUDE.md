@@ -18,7 +18,7 @@
 - `supabase-config.js`：`window.SUPABASE_CONFIG`（url + publishable key）。
 
 ## 關鍵錨點（用 Grep 搜這些名字）
-- 月曆配色（教師）：`COURSE_PALETTE` / `courseColorFor` / `eventStyle` / `renderCalendarLegend`（teacher.html）。12 色，不同課程配不同色。
+- 月曆配色（教師）：`COURSE_PALETTE` / `courseColorFor` / `eventStyle` / `renderCalendarLegend`（teacher.html）。12 色（2026-08 改為較飽和好分辨版，前幾色藍→橘→綠→紫…相鄰色差大），不同課程配不同色。**教師與家長端 `COURSE_PALETTE` 須同步一致**（parent-preview.html 有相同陣列；改任一邊要兩邊一起改並 bump）。月曆兼職事件與圖例**不再加 🏫 小房子**（只用色塊區分）。
 - 月曆配色（家長）：`window.bossfuCourseColor` / `keyColor` / `recolor` / `renderCalLegend`（parent-preview.html，共用同一組）。
 - 學費單開立：教師端 `issueInvoices` / `#issueInvoice`；家長端 `loadIssuedMonths` / `renderInvoices`（近 6 個月，未開立顯示「老師尚未開立」）。
 - 家長隱私隔離：所有 `messages`/`student_files` 寫入都帶 `parent_id`；教師傳檔前選「指定家長」(`#fileParent` / `populateParents`)；教師預覽送訊息帶 `parentId`（`BossfuPreviewParent` → postMessage → `window.__bossfuPreviewParentId`）；教師端「清空未指定家長的舊資料」= `#purgeLegacy`。
