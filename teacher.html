@@ -211,6 +211,12 @@
     body.money-hidden #lessonMetrics .metric b,
     body.money-hidden #financeSummary td:last-child,body.money-hidden #financeTable td:last-child,
     body.money-hidden #financeTable td[data-label="鐘點費"],
+    body.money-hidden #salarySavedDetail .salary-line>b,
+    body.money-hidden #salarySavedDetail .salary-work>header>b,
+    body.money-hidden #salarySavedDetail .salary-check b,
+    body.money-hidden #salarySavedDetail .salary-total b,
+    body.money-hidden #salarySavedDetail .salary-money,
+    body.money-hidden #salaryResult .salary-editor-stat b,
     body.money-hidden .exec-income{
       color:transparent!important;user-select:none;border-radius:6px;
       background-image:radial-gradient(circle at center,#9aa3b4 0 2.1px,transparent 2.5px);
@@ -901,7 +907,7 @@ if(keyEl){
     const month=requestedMonth||salaryEditMonth||curMonth(),saved=salaryDetailMap[month],legacy=Number(incomeMap[month]||0),d=saved||(legacy?{gross:legacy,net:legacy,earnings:[{name:'正職薪資（舊資料，可修改補齊明細）',amount:legacy}],deductions:[],workDetails:[],benefits:[]}:null);
     const picker='<div class="filters no-print"><label>薪資月份<select id="salaryDetailMonth">'+months.map(m=>'<option value="'+m+'"'+(m===month?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+(d?'<button class="btn" id="editSalaryDetail" type="button">修改此月收入與明細</button><button class="btn primary" id="printSalaryDetail" type="button">預覽／存 PDF</button>':'')+'</div>';
     const block=(title,list)=>'<section class="salary-lines"><h3>'+title+'</h3>'+((list||[]).length?(list||[]).map(x=>'<div class="salary-line"><span>'+safeSalaryText(x.name||'項目')+(x.detail?' <small class="muted">'+safeSalaryText(x.detail)+'</small>':'')+'</span><b>'+salaryMoney(x.amount)+'</b></div>').join(''):'<div class="salary-line"><span>無項目</span><b>—</b></div>')+'</section>';
-    const deducted=(d&&d.deductions||[]).reduce((n,x)=>n+Math.abs(Number(x.amount||0)),0),works=(d&&d.workDetails||[]),benefits=(d&&d.benefits||[]),workHtml=works.length?'<h3 style="margin-top:18px">授課與家教詳細紀錄</h3><div class="salary-work-list">'+works.map(x=>'<article class="salary-work"><header><span>'+safeSalaryText(x.name||x.category)+'</span><b>'+salaryMoney(x.amount)+'</b></header><p>'+safeSalaryText(x.schedule||x.detail||'')+(x.rate?'　｜　時薪 '+salaryMoney(x.rate):'')+'</p></article>').join('')+'</div>':'',benefitHtml=benefits.length?'<h3 style="margin-top:18px">其他薪資與假別資訊</h3><div class="salary-detail-grid">'+benefits.map(x=>'<div class="salary-work"><header><span>'+safeSalaryText(x.name)+'</span><b>'+safeSalaryText(x.value)+'</b></header><p>'+safeSalaryText(x.note)+'</p></div>').join('')+'</div>':'';
+    const deducted=(d&&d.deductions||[]).reduce((n,x)=>n+Math.abs(Number(x.amount||0)),0),works=(d&&d.workDetails||[]),benefits=(d&&d.benefits||[]),workHtml=works.length?'<h3 style="margin-top:18px">授課與家教詳細紀錄</h3><div class="salary-work-list">'+works.map(x=>'<article class="salary-work"><header><span>'+safeSalaryText(x.name||x.category)+'</span><b>'+salaryMoney(x.amount)+'</b></header><p>'+safeSalaryText(x.schedule||x.detail||'')+(x.rate?'　｜　時薪 <span class="salary-money">'+salaryMoney(x.rate)+'</span>':'')+'</p></article>').join('')+'</div>':'',benefitHtml=benefits.length?'<h3 style="margin-top:18px">其他薪資與假別資訊</h3><div class="salary-detail-grid">'+benefits.map(x=>'<div class="salary-work"><header><span>'+safeSalaryText(x.name)+'</span><b>'+safeSalaryText(x.value)+'</b></header><p>'+safeSalaryText(x.note)+'</p></div>').join('')+'</div>':'';
     savedEl.innerHTML='<h2>正職薪資明細</h2>'+picker+(d?'<p class="muted">'+month+'　以下逐項說明每筆應發、扣款與授課結算。</p><div class="salary-detail-grid">'+block('應發項目',d.earnings)+block('扣款項目',d.deductions)+'</div>'+workHtml+benefitHtml+'<div class="salary-check"><div>應發總額<b>'+salaryMoney(d.gross)+'</b></div><div>扣款合計<b>- '+salaryMoney(deducted)+'</b></div><div>核算實領<b>'+salaryMoney(Number(d.gross||0)-deducted)+'</b></div></div><div class="salary-total"><span>'+month+' 實際入帳</span><b>'+salaryMoney(d.net)+'</b></div>':'<p class="empty">'+month+' 尚無正職薪資明細，上傳薪資單分析後即可建立。</p>');
     const pickerEl=$('salaryDetailMonth');if(pickerEl)pickerEl.onchange=()=>{salaryEditMonth=pickerEl.value;tgtEl.textContent=pickerEl.value;renderSavedSalary(pickerEl.value)};
     const printBtn=$('printSalaryDetail');if(printBtn)printBtn.onclick=()=>printFulltimeSalary(month,d);
