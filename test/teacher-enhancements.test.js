@@ -46,7 +46,7 @@ check('月曆兼職班次可展開完整明細',
 check('月曆圖例顯示實際兼職單位名稱',
   html.includes('const shiftEmployers=') &&
   html.includes("w.employers?.name||'未命名兼職單位'") &&
-  html.includes('🏫 ${esc(name)}') &&
+  html.includes('border-color:#6b5320"></i>${esc(name)}') &&
   !html.includes('🏫 兼職班次</span>'));
 check('學費與收入展開標題不再覆蓋表單文字',
   html.includes('position:relative;top:auto;background:var(--surface);z-index:1') &&
