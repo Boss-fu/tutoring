@@ -25,9 +25,15 @@ const LESSONS = [
 const EMPLOYERS = [{ id: 7, name: '諾貝爾全科精修班', default_rate: 300, labor_insurance: 0, health_insurance: 259 }];
 const WORK_SHIFTS = [{ id: 101, employer_id: 7, employers: { name: '諾貝爾全科精修班' }, work_date: '2026-08-07',
   start_time: '13:30:00', end_time: '16:30:00', hours: 3, rate: 300, note: '國中自然' }];
+const CALENDAR_EVENTS = [
+  { id: 'ce1', kind: 'personal', title: '桓安高三物理', event_date: '2026-08-10',
+    start_time: '09:00:00', end_time: '12:00:00', note: '家教' },
+  { id: 'ce2', kind: 'fulltime', title: '正職上班', event_date: '2026-08-10',
+    start_time: '09:00:00', end_time: '18:00:00', note: null },
+];
 const SESSION = { access_token: 'x', refresh_token: 'y', user: { id: 'u1' } };
 
-const data = n => n === 'students' ? STUDENTS : n === 'lessons' ? LESSONS : n === 'employers' ? EMPLOYERS : n === 'work_shifts' ? WORK_SHIFTS : [];
+const data = n => n === 'students' ? STUDENTS : n === 'lessons' ? LESSONS : n === 'employers' ? EMPLOYERS : n === 'work_shifts' ? WORK_SHIFTS : n === 'calendar_events' ? CALENDAR_EVENTS : [];
 const q = n => { const o = {
   select: () => o, order: () => o, eq: () => o, in: () => o, limit: () => o,
   insert: () => Promise.resolve({ data: null, error: null }), update: () => o, delete: () => o,
@@ -131,6 +137,27 @@ const check = (name, cond, extra='') => {
   const shiftDetail = $('calendarShiftDetail');
   check('點擊後在月曆下方建立班次明細', !!shiftDetail);
   check('班次明細顯示時間、金額與備註', shiftDetail?.textContent.includes('13:30') && shiftDetail?.textContent.includes('16:30') && shiftDetail?.textContent.includes('NT$ 900') && shiftDetail?.textContent.includes('國中自然'));
+
+  console.log('\n=== 月曆行事曆事件與當日明細 ===');
+  const dayCell = doc.querySelector('.day[data-date="2026-08-10"]');
+  check('月曆畫出個人行程色塊', !!dayCell?.querySelector('.event.ce-personal'));
+  check('月曆畫出正職上班色塊', !!dayCell?.querySelector('.event.ce-full'));
+  // 點日期空白處會列出當天所有課次／行程，逐筆可修改（手機主要操作）
+  dayCell?.dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
+  await new Promise(r => setTimeout(r, 80));
+  const dayDetail = $('calendarDayDetail');
+  check('點日期後列出當天明細清單', !!dayDetail && dayDetail.querySelectorAll('.day-item').length === 2);
+  check('當日明細顯示個人行程標題', !!dayDetail && dayDetail.textContent.includes('桓安高三物理') && dayDetail.textContent.includes('正職上班'));
+  const personalItem = dayDetail?.querySelector('[data-open-cevent="ce1"]');
+  check('當日明細每筆都能點開修改', !!personalItem);
+  personalItem?.dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
+  await new Promise(r => setTimeout(r, 80));
+  check('點個人行程開啟編輯器並帶出正確類型', !$('lessonEditor').classList.contains('hide') && $('formKind').value === 'personal' && $('formTitle').value === '桓安高三物理');
+  const addBtnDetail = $('calendarDayDetail')?.querySelector('[data-add-day="2026-08-10"]');
+  addBtnDetail?.dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
+  await new Promise(r => setTimeout(r, 80));
+  check('在這天新增會帶入該日期', $('formDate').value === '2026-08-10', $('formDate').value);
+  check('提供匯入個人班表按鈕', !!$('importSchedule'));
 
   // open an existing lesson that is 請假 -> status must round-trip
   const editBtn = doc.querySelector('[data-id="l2"]');
