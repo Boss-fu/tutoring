@@ -71,6 +71,8 @@ const check = (name, cond, extra='') => {
     beforeParse(win){
       win.SUPABASE_CONFIG={url:'https://x.supabase.co',publishableKey:'k'};
       win.supabase={createClient:client}; win.BOSSFU_DB=client();
+      // 測試資料固定在 2026-08，釘住檢視月份，避免真實日期跨月後測試失敗
+      try{win.sessionStorage.setItem('bossfu-shown-month','2026-08');}catch(e){}
       win.alert=m=>errors.push('alert(): '+m); win.confirm=()=>true; win.print=()=>{};
       win.scrollTo=()=>{};
       Object.defineProperty(win.HTMLElement.prototype,'scrollIntoView',{value(){},writable:true});
@@ -211,6 +213,10 @@ const check = (name, cond, extra='') => {
   await new Promise(r => setTimeout(r, 120));
   doc.querySelector('[data-view="finance"]').dispatchEvent(new win.MouseEvent('click',{bubbles:true}));
   await new Promise(r => setTimeout(r, 120));
+  // 前面的月份切換測試會把檢視移到真實當月；財務改抓測試資料所在的 2026-08
+  $('financeMonth').value = '2026-08';
+  $('financeMonth').dispatchEvent(new win.Event('change', { bubbles:true }));
+  await new Promise(r => setTimeout(r, 80));
   const financeText = $('financeCards').textContent;
   // 8月實到: l1 (2*1200=2400) + l3 (2*1000=2000) = 4400；l2 請假不計
   check('財務卡片只計實到 4,400', financeText.includes('4,400'), financeText.replace(/\s+/g,' ').slice(0,120));
