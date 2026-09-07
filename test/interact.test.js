@@ -140,7 +140,9 @@ const check = (name, cond, extra='') => {
 
   console.log('\n=== 月曆行事曆事件與當日明細 ===');
   const dayCell = doc.querySelector('.day[data-date="2026-08-10"]');
-  check('月曆畫出個人行程色塊', !!dayCell?.querySelector('.event.ce-personal'));
+  const personalEv = dayCell?.querySelector('.event.ce-personal');
+  check('月曆畫出個人行程色塊', !!personalEv);
+  check('家教類個人行程套用紅色', (personalEv?.getAttribute('style')||'').includes('#fbd6d6'));
   check('月曆畫出正職上班色塊', !!dayCell?.querySelector('.event.ce-full'));
   // 點日期空白處會列出當天所有課次／行程，逐筆可修改（手機主要操作）
   dayCell?.dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
