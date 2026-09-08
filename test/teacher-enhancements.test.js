@@ -46,8 +46,28 @@ check('月曆兼職班次可展開完整明細',
 check('月曆圖例顯示實際兼職單位名稱',
   html.includes('const shiftEmployers=') &&
   html.includes("w.employers?.name||'未命名兼職單位'") &&
-  html.includes('border-color:#6b5320"></i>${esc(name)}') &&
+  html.includes('border-color:#8a6a12"></i>${esc(name)}') &&
   !html.includes('🏫 兼職班次</span>'));
+check('匯入行程／個人行程依課程類型上色',
+  html.includes('function personalTypeStyle(e)') &&
+  html.includes("if(/B班/.test(title))return['#d1efdc'") &&
+  html.includes("return['#fbd6d6','#a51c1c','家教'") &&
+  html.includes("if(/輔導/.test(note)||/輔導/.test(title))return['#d3e6fb'") &&
+  html.includes("if(/教務/.test(note)||/教務/.test(title))return['#e4e7eb'"));
+check('兼職班次月曆改用黃色',
+  html.includes('--event-bg:#fbe7a2;--event-text:#8a6a12'));
+check('匯入個人班表改為可勾選課程的清單',
+  html.includes('function openImportPanel()') &&
+  html.includes('function doImport(') &&
+  html.includes("IMPORT_PICKS_KEY='bossfu-import-picks'") &&
+  html.includes('data-imp="${esc(c.id)}"') &&
+  html.includes('localStorage.setItem(IMPORT_PICKS_KEY'));
+check('匯入的行程可整批清除且不誤刪手動個人行程',
+  html.includes('function isImportedEvent(e)') &&
+  html.includes("e.note.indexOf('匯入')===0||IMPORTED_LABELS.includes(e.note)") &&
+  html.includes("note:'匯入·'+(c.label") &&
+  html.includes('先清除先前匯入的固定行程') &&
+  html.includes("delete().in('id',oldIds)"));
 check('學費與收入展開標題不再覆蓋表單文字',
   html.includes('position:relative;top:auto;background:var(--surface);z-index:1') &&
   !html.includes('position:sticky;top:76px;background:var(--surface);z-index:5'));
