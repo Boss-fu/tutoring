@@ -16,7 +16,7 @@ check('兼職班次也能拖曳移動或複製',
   html.includes("async function mMoveShift(id,date)") &&
   html.includes("async function mCopyShift(id,date)") &&
   html.includes("payload.kind==='shift'") &&
-  html.includes("kind:ev.dataset.shift?'shift':'lesson'"));
+  html.includes("kind:ev.dataset.shift?'shift':ev.dataset.cevent?'cevent':'lesson'"));
 check('兼職單位與班次都有修改入口',
   html.includes('data-edit-employer') && html.includes('data-edit-shift'));
 check('修改單位時同步既有班次時薪',
@@ -62,6 +62,19 @@ check('匯入個人班表改為可勾選課程的清單',
   html.includes("IMPORT_PICKS_KEY='bossfu-import-picks'") &&
   html.includes('data-imp="${esc(c.id)}"') &&
   html.includes('localStorage.setItem(IMPORT_PICKS_KEY'));
+check('正職/個人/匯入行程也可拖曳移動或複製',
+  html.includes('draggable="true" data-cevent="${e.id}"') &&
+  html.includes("ev.dataset.cevent?'cevent':'lesson'") &&
+  html.includes('async function mMoveCevent(id,date)') &&
+  html.includes('async function mCopyCevent(id,date)') &&
+  html.includes("payload.kind==='cevent'") &&
+  html.includes("kind==='cevent'?'行程':'課次'"));
+check('編輯器提供每週重複按鈕',
+  html.includes('id="repeatWeekly"') &&
+  html.includes('async function repeatWeekly()') &&
+  html.includes('每週重複幾週') &&
+  html.includes('base.getDate()+i*7') &&
+  html.includes("$('repeatWeekly').onclick=repeatWeekly"));
 check('提供一鍵清除匯入行程的按鈕（免 SQL）',
   html.includes('id="clearImported"') &&
   html.includes('async function clearImportedEvents()') &&
