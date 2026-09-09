@@ -43,17 +43,19 @@ check('月曆兼職班次可展開完整明細',
   html.includes("closest('.event[data-shift]')") &&
   html.includes('<th>開始</th><th>結束</th><th>時數</th><th>時薪</th><th>本次金額</th><th>備註</th>') &&
   !html.includes('<span>兼職單位</span>'));
-check('月曆圖例顯示實際兼職單位名稱',
-  html.includes('const shiftEmployers=') &&
-  html.includes("w.employers?.name||'未命名兼職單位'") &&
-  html.includes('border-color:#8a6a12"></i>${esc(name)}') &&
+check('月曆圖例改為統一「類別顏色對照」',
+  html.includes('類別顏色對照') &&
+  html.includes("const order=['tutor','coach','main','admin','parttime','misc']") &&
+  !html.includes('const shiftEmployers=') &&
   !html.includes('🏫 兼職班次</span>'));
-check('匯入行程／個人行程依課程類型上色',
-  html.includes('function personalTypeStyle(e)') &&
-  html.includes("if(/B班/.test(title))return['#d1efdc'") &&
-  html.includes("return['#fbd6d6','#a51c1c','家教'") &&
-  html.includes("if(/輔導/.test(note)||/輔導/.test(title))return['#d3e6fb'") &&
-  html.includes("if(/教務/.test(note)||/教務/.test(title))return['#e4e7eb'"));
+check('月曆同一類使用同一顏色（CATEGORY_STYLE）',
+  html.includes('const CATEGORY_STYLE={') &&
+  html.includes("tutor:['#fbd6d6','#a51c1c','家教']") &&
+  html.includes("coach:['#d3e6fb','#15528c','輔導課']") &&
+  html.includes("main:['#d1efdc','#12694a','正課']") &&
+  html.includes("parttime:['#fbe7a2','#8a6a12','兼職']") &&
+  html.includes('function eventStyle(l){const c=CATEGORY_STYLE.tutor') &&
+  html.includes('function personalTypeStyle(e)'));
 check('兼職班次月曆改用黃色',
   html.includes('--event-bg:#fbe7a2;--event-text:#8a6a12'));
 check('匯入個人班表改為可勾選課程的清單',
