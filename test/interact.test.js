@@ -30,6 +30,8 @@ const CALENDAR_EVENTS = [
     start_time: '09:00:00', end_time: '12:00:00', note: '家教' },
   { id: 'ce2', kind: 'fulltime', title: '正職上班', event_date: '2026-08-10',
     start_time: '09:00:00', end_time: '18:00:00', note: null },
+  { id: 'ce3', kind: 'personal', title: '晨會', event_date: '2026-08-04',
+    start_time: '08:00:00', end_time: '09:00:00', note: null },
 ];
 const SESSION = { access_token: 'x', refresh_token: 'y', user: { id: 'u1' } };
 
@@ -140,6 +142,10 @@ const check = (name, cond, extra='') => {
 
   console.log('\n=== 月曆行事曆事件與當日明細 ===');
   const dayCell = doc.querySelector('.day[data-date="2026-08-10"]');
+  const orderCell = doc.querySelector('.day[data-date="2026-08-04"]');
+  const orderTexts = orderCell ? [...orderCell.querySelectorAll('.event')].map(x => x.textContent) : [];
+  check('同一天事件依上課時間排序', orderTexts.length >= 2 && orderTexts[0].includes('晨會') && orderTexts.some((t,i)=>i>0 && t.includes('桓安')), orderTexts.join(' | '));
+
   const personalEv = dayCell?.querySelector('.event.ce-personal');
   check('月曆畫出個人行程色塊', !!personalEv);
   check('家教類個人行程套用紅色', (personalEv?.getAttribute('style')||'').includes('#fbd6d6'));
