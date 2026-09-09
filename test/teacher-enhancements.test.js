@@ -53,7 +53,7 @@ check('月曆同一類使用同一顏色（CATEGORY_STYLE）',
   html.includes("tutor:['#fbd6d6','#a51c1c','家教']") &&
   html.includes("coach:['#d3e6fb','#15528c','輔導課']") &&
   html.includes("main:['#d1efdc','#12694a','正課']") &&
-  html.includes("parttime:['#fbe7a2','#8a6a12','兼職']") &&
+  html.includes("parttime:['#fbe7a2','#8a6a12','兼職（諾貝爾）']") &&
   html.includes('function eventStyle(l){const c=CATEGORY_STYLE.tutor') &&
   html.includes('function personalTypeStyle(e)'));
 check('兼職班次月曆改用黃色',
