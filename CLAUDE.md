@@ -9,7 +9,7 @@
 
 ## 檔案角色
 - `home.html`：進站身分選擇頁（自包含、含 PWA/iOS standalone 標記 + `home.webmanifest`）。**不要外部載入 JS/CSS**（避免踩版本一致性測試）。
-- `index.html`：個人班表引擎；被 `teacher.html` 以 iframe (`?embed=teacher`) 嵌入。**勿刪、勿改成別的頁**。
+- `index.html`：個人班表引擎；被 `teacher.html` 以 iframe (`?embed=teacher`) 嵌入。**勿刪、勿改成別的頁**。班表資料原本只存 localStorage `my-schedule-v2`，現另加**雲端同步**：頁尾一段 script 把 `state.data` 讀寫到 Supabase `teacher_prefs(key='personal_schedule')`（老師身分才可讀寫）——`save()` 後 debounce upsert、載入時先 pull 雲端（有就套用並寫回 localStorage、沒有就用本機建立第一份備份），未登入時退回純本機。主 IIFE 曝露 `window.__scheduleApplyCloud` / `__scheduleCurrentData` / `__scheduleCloudSave` 供該層使用。**需先套用 `supabase/20260909_teacher_prefs.sql`**。
 - `teacher.html`：教師端（DB 版）。單檔多個 `<script type="module">`，各自建 `window.BOSSFU_DB`。
 - `parent.html`：家長端登入外殼，登入後 iframe 嵌 `parent-preview.html`。
 - `parent-guide.html`：給家長閱讀的響應式使用說明書；登入畫面的「查看家長端使用說明」連至 `/parent-guide`，說明書中的返回按鈕固定回到 `/parent`。
@@ -45,7 +45,7 @@
 - 推播通知：`pwa.js` 的 `subscribePush` / `window.bossfuPush(ids,…)` / `bossfuPushRole('teacher',…)`；Edge Function `supabase/functions/send-push`（用 VAPID 密鑰）；`sw.js` 的 push/notificationclick。觸發點：開立學費單、老師傳檔/回饋、家長回饋。
 
 ## Supabase 資料表（線上實際）
-`profiles`(role: teacher/parent)、`students`、`parent_students`(多對多)、`lessons`、`messages`(有 `author_role`、`parent_id`)、`student_files`(有 `uploader_id`、`parent_id`)、`issued_invoices`(student_id, month, PK)、`site_settings`(key/value，如 `finance_profile`、`salary_income`＝正職各月實領 JSON)、`employers`(兼職單位；`default_rate`/`labor_insurance`/`health_insurance`)、`work_shifts`(兼職班次；`employer_id`/`work_date`/`hours`/`rate`)、`push_subscriptions`(user_id/endpoint/p256dh/auth，推播訂閱)、`calendar_events`(老師專用一站式行事曆：`kind`=fulltime正職上班/personal個人行程、`title`/`event_date`/`start_time`/`end_time`/`note`；只放時段標記、不計金額；SQL＝`supabase/20260907_calendar_events.sql`，RLS 用 `is_teacher()`)。Storage bucket：`exam-papers`（上傳已移除前端 10MB 限制；Storage 端仍有預設上限）。
+`profiles`(role: teacher/parent)、`students`、`parent_students`(多對多)、`lessons`、`messages`(有 `author_role`、`parent_id`)、`student_files`(有 `uploader_id`、`parent_id`)、`issued_invoices`(student_id, month, PK)、`site_settings`(key/value，如 `finance_profile`、`salary_income`＝正職各月實領 JSON)、`employers`(兼職單位；`default_rate`/`labor_insurance`/`health_insurance`)、`work_shifts`(兼職班次；`employer_id`/`work_date`/`hours`/`rate`)、`push_subscriptions`(user_id/endpoint/p256dh/auth，推播訂閱)、`teacher_prefs`(key/value jsonb，老師專用設定；`key='personal_schedule'`＝個人班表雲端備份；RLS 只有 `is_teacher()` 可讀寫，家長讀不到，故**不放 site_settings**；SQL＝`supabase/20260909_teacher_prefs.sql`)、`calendar_events`(老師專用一站式行事曆：`kind`=fulltime正職上班/personal個人行程、`title`/`event_date`/`start_time`/`end_time`/`note`；只放時段標記、不計金額；SQL＝`supabase/20260907_calendar_events.sql`，RLS 用 `is_teacher()`)。Storage bucket：`exam-papers`（上傳已移除前端 10MB 限制；Storage 端仍有預設上限）。
 - RLS 輔助函式：`is_teacher()`、`can_view_student(uuid)`。
 - 隱私隔離用 **restrictive** policy：`isolate parent messages` / `isolate parent files`（非老師只能 select `parent_id = auth.uid()`）。
 - **DDL 只能由使用者在 Supabase SQL Editor 執行**（環境無 DB 憑證）。改 schema 時要寫「可重複執行」的 SQL（`if not exists` / `drop policy if exists`）。
