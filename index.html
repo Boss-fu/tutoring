@@ -64,7 +64,10 @@
   .seg button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
   .seg button:hover:not(.active){color:var(--text)}
 
-  .topbar-actions{display:flex;align-items:center;gap:8px}
+  .topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .save-status{font-size:12.5px;font-weight:700;color:var(--muted,#6b7280);white-space:nowrap}
+  .save-status.ok{color:#12694a}
+  .save-status.warn{color:#9a3b16}
   .btn{
     appearance:none;font:inherit;font-weight:700;font-size:14px;cursor:pointer;
     border-radius:10px;padding:8px 14px;border:1px solid var(--border-strong);
@@ -315,6 +318,9 @@
     <div class="seg" id="seasonTabs"></div>
       <div class="topbar-actions">
       <button class="btn btn-primary" id="addEventTop" type="button">＋ 新增行程</button>
+      <button class="btn" id="saveScheduleBtn" type="button" title="立即儲存並同步到雲端">💾 儲存</button>
+      <button class="btn btn-ghost" id="syncScheduleBtn" type="button" title="抓取雲端最新班表">↻ 同步</button>
+      <span class="save-status" id="saveStatus" aria-live="polite"></span>
       <div class="seg" id="viewToggle"></div>
       <button class="btn btn-ghost btn-icon" id="themeBtn" title="切換深色/淺色" aria-label="切換主題">🌓</button>
     </div>
@@ -322,7 +328,7 @@
   <main id="main"></main>
   <section class="schedule-tools" aria-label="個人課表設定">
     <div class="schedule-tools-card">
-      <div class="schedule-tools-panel manage-panel active" data-schedule-panel="manage"><div class="manage-panel-head"><p>直接管理工作類別、課程、待辦與備份；所有異動會立即更新課表。</p><button class="btn btn-primary" id="addEventManage" type="button">＋ 新增行程</button></div><div class="manage-panel-body" id="managePanelBody"></div></div>
+      <div class="schedule-tools-panel manage-panel active" data-schedule-panel="manage"><div class="manage-panel-head"><p>直接管理工作類別、課程、待辦與備份；所有異動會自動儲存，也可按「儲存」立即同步到雲端。</p><span style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-primary" id="addEventManage" type="button">＋ 新增行程</button><button class="btn" id="saveScheduleBtn2" type="button" title="立即儲存並同步到雲端">💾 儲存</button><span class="save-status" id="saveStatus2" aria-live="polite"></span></span></div><div class="manage-panel-body" id="managePanelBody"></div></div>
     </div>
   </section>
   <footer class="legend" id="legend"></footer>
@@ -450,6 +456,24 @@
     memoryFallback=state.data;
     // 同步到雲端（Supabase），讓個人班表跨裝置保存；雲端層在頁尾另一段 script 綁定。
     try{ if(window.__scheduleCloudSave) window.__scheduleCloudSave(); }catch(e){}
+  }
+  function nowHM(){ var d=new Date(),p=function(n){return (n<10?'0':'')+n;}; return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); }
+  function setSaveStatus(msg,cls){ ['saveStatus','saveStatus2'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.textContent=msg; el.className='save-status'+(cls?' '+cls:''); } }); }
+  function doManualSave(){
+    save(); setSaveStatus('儲存中…','');
+    Promise.resolve(window.__scheduleCloudFlush?window.__scheduleCloudFlush():null).then(function(res){
+      if(res===true) setSaveStatus('已儲存並同步雲端 ✓ '+nowHM(),'ok');
+      else if(res===false) setSaveStatus('已存本機，雲端稍後自動重試 '+nowHM(),'warn');
+      else setSaveStatus('已儲存本機 ✓ '+nowHM()+'（未登入，未上雲）','ok');
+    });
+  }
+  function doManualSync(){
+    setSaveStatus('同步中…','');
+    Promise.resolve(window.__schedulePull?window.__schedulePull():null).then(function(res){
+      if(res===true) setSaveStatus('已抓取雲端最新 ✓ '+nowHM(),'ok');
+      else if(res===false) setSaveStatus('雲端尚無班表，已上傳本機版本 '+nowHM(),'ok');
+      else setSaveStatus('未登入，僅使用本機資料 '+nowHM(),'warn');
+    });
   }
   function saveUI(){
     try{ localStorage.setItem('my-schedule-ui',JSON.stringify(
@@ -809,8 +833,11 @@
   });
 
   document.addEventListener('click',function(e){
-    var t=e.target.closest('[data-season],[data-view],[data-day],[data-schedule-tool],[data-x],[data-cdel],[data-tododel],[data-todoadd],[data-todoclear],#closeDrawer,#scrim,#addCategory,#addCourse,#exportBtn,#importBtn,#printBtn,#resetBtn,#themeBtn,#addEventBtn,#addEventTop,#addEventManage,#evClose,#evCancel,#evScrim,#evSubmit');
+    var t=e.target.closest('[data-season],[data-view],[data-day],[data-schedule-tool],[data-x],[data-cdel],[data-tododel],[data-todoadd],[data-todoclear],#closeDrawer,#scrim,#addCategory,#addCourse,#exportBtn,#importBtn,#printBtn,#resetBtn,#themeBtn,#addEventBtn,#addEventTop,#addEventManage,#evClose,#evCancel,#evScrim,#evSubmit,#saveScheduleBtn,#saveScheduleBtn2,#syncScheduleBtn');
     if(!t) return;
+
+    if(t.id==='saveScheduleBtn'||t.id==='saveScheduleBtn2'){ doManualSave(); return; }
+    if(t.id==='syncScheduleBtn'){ doManualSync(); return; }
 
     if(t.hasAttribute('data-schedule-tool')){
       var tool=t.getAttribute('data-schedule-tool');
@@ -948,6 +975,12 @@
   }catch(e){}
   render();
   renderManagePanel();
+  // 跨分頁即時同步：同瀏覽器其他分頁／iframe 儲存時，這裡即時套用並重畫。
+  try{ window.addEventListener('storage', function(e){
+    if(e.key===STORAGE_KEY && e.newValue){
+      try{ state.data=migrate(JSON.parse(e.newValue)); render(); renderManagePanel(); if(state.ui.drawer) renderDrawer(); setSaveStatus('已從其他分頁更新 ✓ '+nowHM(),'ok'); }catch(_){}
+    }
+  }); }catch(_){}
   // 供頁尾雲端同步層使用：讀目前資料、以及套用雲端拉回的資料並重畫。
   window.__scheduleCurrentData=function(){ return state.data; };
   window.__scheduleApplyCloud=function(d){
@@ -966,7 +999,7 @@
   }
 })();
 </script>
-<script src="vendor/supabase.js?v=20260909074147"></script><script src="boot-check.js?v=20260909074147"></script><script src="supabase-config.js?v=20260909074147"></script><script type="module" src="auth.js?v=20260909074147"></script>
+<script src="vendor/supabase.js?v=20260909081215"></script><script src="boot-check.js?v=20260909081215"></script><script src="supabase-config.js?v=20260909081215"></script><script type="module" src="auth.js?v=20260909081215"></script>
 <script>
 /* 個人班表雲端同步：把 state.data 讀寫到 Supabase teacher_prefs(key='personal_schedule')，
    讓個人班表跨裝置保存。老師身分才能讀寫（RLS is_teacher()）；未登入時退回純本機。
@@ -974,29 +1007,37 @@
 (function(){
   var KEY='personal_schedule', pushTimer=null, ready=false;
   function db(){ return window.BOSSFU_DB; }
-  function session(cb){ var d=db(); if(!d||!d.auth){cb(null);return;} d.auth.getSession().then(function(r){ cb(r&&r.data&&r.data.session||null); }).catch(function(){cb(null);}); }
-  function pull(){
-    var d=db(); if(!d||!d.from) return;
-    d.from('teacher_prefs').select('value').eq('key',KEY).maybeSingle().then(function(res){
-      var cloud=res&&res.data&&res.data.value;
-      if(cloud&&cloud.schedules){ if(window.__scheduleApplyCloud) window.__scheduleApplyCloud(cloud); }
-      else { push(); } // 雲端還沒有 → 用本機現有班表建立第一份備份
-      ready=true;
-    }).catch(function(){ ready=true; });
-  }
+  function getSession(){ var d=db(); if(!d||!d.auth) return Promise.resolve(null); return d.auth.getSession().then(function(r){ return r&&r.data&&r.data.session||null; }).catch(function(){ return null; }); }
+  // 立即把本機資料寫到雲端；回傳 Promise<true 成功 / false 失敗 / null 未登入>。
   function push(){
-    var d=db(); if(!d||!d.from||!window.__scheduleCurrentData) return;
-    session(function(s){
-      if(!s) return; var data=window.__scheduleCurrentData(); if(!data) return;
-      d.from('teacher_prefs').upsert({key:KEY,value:data,updated_at:new Date().toISOString()},{onConflict:'key'}).then(function(){}).catch(function(){});
+    var d=db(); if(!d||!d.from||!window.__scheduleCurrentData) return Promise.resolve(null);
+    return getSession().then(function(s){
+      if(!s) return null; var data=window.__scheduleCurrentData(); if(!data) return null;
+      return d.from('teacher_prefs').upsert({key:KEY,value:data,updated_at:new Date().toISOString()},{onConflict:'key'})
+        .then(function(res){ return !(res&&res.error); }).catch(function(){ return false; });
     });
   }
-  window.__scheduleCloudSave=function(){ if(!ready) return; if(pushTimer) clearTimeout(pushTimer); pushTimer=setTimeout(push,800); };
+  // 從雲端抓最新班表；回傳 Promise<true 有雲端資料已套用 / false 雲端空已上傳本機 / null 未登入>。
+  function pull(){
+    var d=db(); if(!d||!d.from) return Promise.resolve(null);
+    return getSession().then(function(s){
+      if(!s) return null;
+      return d.from('teacher_prefs').select('value').eq('key',KEY).maybeSingle().then(function(res){
+        var cloud=res&&res.data&&res.data.value;
+        if(cloud&&cloud.schedules){ if(window.__scheduleApplyCloud) window.__scheduleApplyCloud(cloud); return true; }
+        return push().then(function(){ return false; }); // 雲端還沒有 → 用本機現有班表建立第一份備份
+      }).catch(function(){ return null; });
+    });
+  }
+  window.__scheduleCloudSave=function(){ if(!ready) return; if(pushTimer) clearTimeout(pushTimer); pushTimer=setTimeout(function(){ push(); },800); };
+  window.__scheduleCloudFlush=function(){ if(pushTimer){ clearTimeout(pushTimer); pushTimer=null; } return push(); };
+  window.__schedulePull=function(){ return pull(); };
   function start(){
     var d=db(); if(!d||!d.from){ return setTimeout(start,300); }
-    session(function(s){ if(s) pull(); }); // 未登入（純本機開啟）就維持 localStorage
+    pull().then(function(){ ready=true; }, function(){ ready=true; });
   }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded',start);
 })();
 </script>
+<script src="app-update.js?v=20260909081215"></script>
 </body></html>

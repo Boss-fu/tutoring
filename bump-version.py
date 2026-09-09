@@ -72,7 +72,11 @@ def main():
             with open(name, 'w', encoding='utf-8') as f:
                 f.write(new_content)
 
-    print(f'Stamped {total} local asset references with v={version}')
+    # 更新橫幅偵測用：把同一組版本戳寫進 version.json，app-update.js 會拿它比對。
+    with open('version.json', 'w', encoding='utf-8') as f:
+        f.write('{"build":"%s"}\n' % version)
+
+    print(f'Stamped {total} local asset references with v={version}; wrote version.json build={version}')
 
 if __name__ == '__main__':
     main()
