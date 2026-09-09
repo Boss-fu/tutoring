@@ -62,6 +62,12 @@ check('匯入個人班表改為可勾選課程的清單',
   html.includes("IMPORT_PICKS_KEY='bossfu-import-picks'") &&
   html.includes('data-imp="${esc(c.id)}"') &&
   html.includes('localStorage.setItem(IMPORT_PICKS_KEY'));
+check('提供一鍵清除匯入行程的按鈕（免 SQL）',
+  html.includes('id="clearImported"') &&
+  html.includes('async function clearImportedEvents()') &&
+  html.includes('calEvents.filter(isImportedEvent).map(e=>e.id)') &&
+  html.includes("delete().in('id',ids)") &&
+  html.includes("$('clearImported').onclick=clearImportedEvents"));
 check('匯入的行程可整批清除且不誤刪手動個人行程',
   html.includes('function isImportedEvent(e)') &&
   html.includes("e.note.indexOf('匯入')===0||IMPORTED_LABELS.includes(e.note)") &&
