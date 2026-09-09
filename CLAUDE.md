@@ -50,8 +50,12 @@
 - 隱私隔離用 **restrictive** policy：`isolate parent messages` / `isolate parent files`（非老師只能 select `parent_id = auth.uid()`）。
 - **DDL 只能由使用者在 Supabase SQL Editor 執行**（環境無 DB 憑證）。改 schema 時要寫「可重複執行」的 SQL（`if not exists` / `drop policy if exists`）。
 
+## 關鍵錨點（續）
+- **版本更新橫幅**：`app-update.js`（teacher/parent/index 皆載入；`index` 內嵌時 `window.top!==self` 不顯示）。比對「本頁載入版本」(自身 `?v=` 版本戳) 與伺服器 `version.json.build`，不同就在頁面最上方顯示紅色橫幅「有新版本可用／立即更新」。按下＝清 `caches`＋對 SW `postMessage({type:'SKIP_WAITING'})`＋以一次性 `?_v=` 參數 `location.replace` 重載（繞過 HTML 快取），下次載入再把 `_v` 清掉。`sw.js` 已加 `message`→`skipWaiting()`。`bump-version.py` 每次會把同一版本戳寫進 `version.json`。（家長端 iframe 內容 parent-preview、home、parent-guide 目前未掛此橫幅。）
+- **個人課表儲存/同步鈕**（index.html）：頂列與管理面板各有「💾 儲存」；頂列另有「↻ 同步」。`doManualSave`＝`save()`＋`window.__scheduleCloudFlush()`（立即 upsert，回 Promise），`doManualSync`＝`window.__schedulePull()`（抓雲端最新）；狀態顯示在 `#saveStatus`/`#saveStatus2`。跨分頁即時同步：監聽 `storage` 事件（同瀏覽器其他分頁/iframe 存檔時即時套用重畫）。
+
 ## 慣例 / 部署前
-- 改任何被 `?v=` 載入的子資源（js/css/被 iframe 的 html）後，跑 `python3 bump-version.py` 統一版本號（測試 `cache-bust` 會檢查一致）。頂層 HTML 文件本身改動不需 bump。
+- 改任何被 `?v=` 載入的子資源（js/css/被 iframe 的 html）後，跑 `python3 bump-version.py` 統一版本號（測試 `cache-bust` 會檢查一致）＋自動更新 `version.json`。頂層 HTML 文件本身改動不需 bump。
 - 測試：`npm test`（含 cache-bust / boot / pages / preview / parent 等）。改行為時記得同步更新對應測試的 DB stub。
 - 只推 `claude/through-this-5f7djl`；PR 合併進 `main`。原 PR 合併後，follow-up 要從最新 `main` 重開同名分支（`git checkout -B ... origin/main`），force-with-lease 推。
 

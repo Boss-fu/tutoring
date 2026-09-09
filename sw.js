@@ -7,6 +7,11 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 
+// 「立即更新」橫幅會送 SKIP_WAITING，讓等待中的新版 SW 立刻接管。
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('push', event => {
   const data = event.data?.json?.() || {};
   event.waitUntil(self.registration.showNotification(data.title || '福大自然家教通知', {
