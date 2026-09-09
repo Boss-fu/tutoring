@@ -448,6 +448,8 @@
     try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state.data)); }
     catch(e){ memoryFallback=state.data; }
     memoryFallback=state.data;
+    // 同步到雲端（Supabase），讓個人班表跨裝置保存；雲端層在頁尾另一段 script 綁定。
+    try{ if(window.__scheduleCloudSave) window.__scheduleCloudSave(); }catch(e){}
   }
   function saveUI(){
     try{ localStorage.setItem('my-schedule-ui',JSON.stringify(
@@ -946,6 +948,14 @@
   }catch(e){}
   render();
   renderManagePanel();
+  // 供頁尾雲端同步層使用：讀目前資料、以及套用雲端拉回的資料並重畫。
+  window.__scheduleCurrentData=function(){ return state.data; };
+  window.__scheduleApplyCloud=function(d){
+    if(!d||!d.schedules) return;
+    state.data=migrate(d);
+    try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state.data)); }catch(e){}
+    render(); renderManagePanel(); if(state.ui.drawer) renderDrawer();
+  };
   if(toolsOnly){
     // 從左側「新增／管理行程」進來時，直接開啟完整管理面板。
     document.querySelectorAll('[data-schedule-tool]').forEach(function(x){
@@ -956,5 +966,37 @@
   }
 })();
 </script>
-<script src="vendor/supabase.js?v=20260821084855"></script><script src="boot-check.js?v=20260821084855"></script><script src="supabase-config.js?v=20260821084855"></script><script type="module" src="auth.js?v=20260821084855"></script>
+<script src="vendor/supabase.js?v=20260909074147"></script><script src="boot-check.js?v=20260909074147"></script><script src="supabase-config.js?v=20260909074147"></script><script type="module" src="auth.js?v=20260909074147"></script>
+<script>
+/* 個人班表雲端同步：把 state.data 讀寫到 Supabase teacher_prefs(key='personal_schedule')，
+   讓個人班表跨裝置保存。老師身分才能讀寫（RLS is_teacher()）；未登入時退回純本機。
+   需先套用 supabase/20260909_teacher_prefs.sql 建表。 */
+(function(){
+  var KEY='personal_schedule', pushTimer=null, ready=false;
+  function db(){ return window.BOSSFU_DB; }
+  function session(cb){ var d=db(); if(!d||!d.auth){cb(null);return;} d.auth.getSession().then(function(r){ cb(r&&r.data&&r.data.session||null); }).catch(function(){cb(null);}); }
+  function pull(){
+    var d=db(); if(!d||!d.from) return;
+    d.from('teacher_prefs').select('value').eq('key',KEY).maybeSingle().then(function(res){
+      var cloud=res&&res.data&&res.data.value;
+      if(cloud&&cloud.schedules){ if(window.__scheduleApplyCloud) window.__scheduleApplyCloud(cloud); }
+      else { push(); } // 雲端還沒有 → 用本機現有班表建立第一份備份
+      ready=true;
+    }).catch(function(){ ready=true; });
+  }
+  function push(){
+    var d=db(); if(!d||!d.from||!window.__scheduleCurrentData) return;
+    session(function(s){
+      if(!s) return; var data=window.__scheduleCurrentData(); if(!data) return;
+      d.from('teacher_prefs').upsert({key:KEY,value:data,updated_at:new Date().toISOString()},{onConflict:'key'}).then(function(){}).catch(function(){});
+    });
+  }
+  window.__scheduleCloudSave=function(){ if(!ready) return; if(pushTimer) clearTimeout(pushTimer); pushTimer=setTimeout(push,800); };
+  function start(){
+    var d=db(); if(!d||!d.from){ return setTimeout(start,300); }
+    session(function(s){ if(s) pull(); }); // 未登入（純本機開啟）就維持 localStorage
+  }
+  if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded',start);
+})();
+</script>
 </body></html>
