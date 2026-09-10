@@ -120,6 +120,12 @@ check('薪資卡收合時仍可直接永久儲存',
   html.includes('saveSalaryTop') &&
   html.includes("$('saveSalaryTop').onclick=()=>$('saveSalary').click()") &&
   html.includes("' 正職收入與明細'"));
+check('正職薪資明細可整月刪除（放錯月份時回復）',
+  html.includes('id="deleteSalaryDetail"') &&
+  html.includes("$('deleteSalaryDetail')") &&
+  html.includes('delete im[month]') &&
+  html.includes('delete dm[month]') &&
+  html.includes('的正職薪資與明細'));
 check('正職薪資可獨立預覽並另存 PDF',
   html.includes('printSalaryDetail') && html.includes('printFulltimeSalary') &&
   html.includes('正職薪資明細_') && html.includes('@page{size:A4;margin:12mm}') &&
