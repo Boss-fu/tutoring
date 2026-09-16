@@ -78,6 +78,12 @@ check('所有類型皆可標出席狀態（含遲到）',
 check('明確分類欄位可持久化',
   html.includes("category:(cat==='priv'||cat==='comp')?cat:null") &&
   html.includes('category:cat'));
+check('匯入／行事曆行程可一鍵轉為正式課次',
+  html.includes('id="toCourse"') &&
+  html.includes('id="convertCevent"') &&
+  html.includes("$('toCourse').onclick") &&
+  html.includes("$('convertCevent').value=cevId") &&
+  html.includes("db.from('calendar_events').delete().eq('id',conv)"));
 check('兼職班次月曆改用黃色',
   html.includes('--event-bg:#fbe7a2;--event-text:#8a6a12'));
 check('匯入個人班表改為可勾選課程的清單',
