@@ -45,17 +45,20 @@ check('月曆兼職班次可展開完整明細',
   !html.includes('<span>兼職單位</span>'));
 check('月曆圖例改為統一「類別顏色對照」',
   html.includes('類別顏色對照') &&
-  html.includes("const order=['tutor','coach','main','admin','parttime','misc']") &&
+  html.includes("const order=['priv','comp','part','full']") &&
   !html.includes('const shiftEmployers=') &&
   !html.includes('🏫 兼職班次</span>'));
-check('月曆同一類使用同一顏色（CATEGORY_STYLE）',
+check('月曆四大分類：私人家教／公司家教／兼職／正職上班（CATEGORY_STYLE）',
   html.includes('const CATEGORY_STYLE={') &&
-  html.includes("tutor:['#fbd6d6','#a51c1c','家教']") &&
-  html.includes("coach:['#d3e6fb','#15528c','輔導課']") &&
-  html.includes("main:['#d1efdc','#12694a','正課']") &&
-  html.includes("parttime:['#fbe7a2','#8a6a12','兼職（諾貝爾）']") &&
-  html.includes('function eventStyle(l){const c=CATEGORY_STYLE.tutor') &&
+  html.includes("priv:['#fbd6d6','#a51c1c','私人家教']") &&
+  html.includes("comp:['#e6d7fb','#5a32a0','公司家教']") &&
+  html.includes("part:['#fbe7a2','#8a6a12','兼職']") &&
+  html.includes("full:['#d3e6fb','#15528c','正職上班']") &&
+  html.includes('function lessonCat(l){return COMPANY_NAMES.test') &&
+  html.includes('function eventStyle(l){const c=CATEGORY_STYLE[lessonCat(l)]') &&
   html.includes('function personalTypeStyle(e)'));
+check('月曆隱藏個人行程（misc）',
+  html.includes("if(c[3]==='misc')return"));
 check('兼職班次月曆改用黃色',
   html.includes('--event-bg:#fbe7a2;--event-text:#8a6a12'));
 check('匯入個人班表改為可勾選課程的清單',

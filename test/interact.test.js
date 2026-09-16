@@ -30,7 +30,7 @@ const CALENDAR_EVENTS = [
     start_time: '09:00:00', end_time: '12:00:00', note: '家教' },
   { id: 'ce2', kind: 'fulltime', title: '正職上班', event_date: '2026-08-10',
     start_time: '09:00:00', end_time: '18:00:00', note: null },
-  { id: 'ce3', kind: 'personal', title: '晨會', event_date: '2026-08-04',
+  { id: 'ce3', kind: 'fulltime', title: '晨會', event_date: '2026-08-04',
     start_time: '08:00:00', end_time: '09:00:00', note: null },
 ];
 const SESSION = { access_token: 'x', refresh_token: 'y', user: { id: 'u1' } };
