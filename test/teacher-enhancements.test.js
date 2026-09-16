@@ -12,7 +12,7 @@ check('拖曳後顯示移動／複製選擇',
   html.includes('mChooseAction(day.dataset.date,payload.kind)') &&
   html.includes('複製到新日期') && html.includes('移動到新日期'));
 check('兼職班次也能拖曳移動或複製',
-  html.includes('class="event shift" draggable="true"') &&
+  html.includes('class="event shift${statusOff(w.status)}" draggable="true"') &&
   html.includes("async function mMoveShift(id,date)") &&
   html.includes("async function mCopyShift(id,date)") &&
   html.includes("payload.kind==='shift'") &&
@@ -54,11 +54,30 @@ check('月曆四大分類：私人家教／公司家教／兼職／正職上班�
   html.includes("comp:['#e6d7fb','#5a32a0','公司家教']") &&
   html.includes("part:['#fbe7a2','#8a6a12','兼職']") &&
   html.includes("full:['#d3e6fb','#15528c','正職上班']") &&
-  html.includes('function lessonCat(l){return COMPANY_NAMES.test') &&
-  html.includes('function eventStyle(l){const c=CATEGORY_STYLE[lessonCat(l)]') &&
+  html.includes('function lessonCat(l){if(l&&(l.category') &&
+  html.includes('function eventStyle(l){if(l&&l.color)') &&
   html.includes('function personalTypeStyle(e)'));
 check('月曆隱藏個人行程（misc）',
   html.includes("if(c[3]==='misc')return"));
+check('類型下拉＝四大分類（私人家教／公司家教／兼職／正職上班）',
+  html.includes('<option value="priv">私人家教</option>') &&
+  html.includes('<option value="comp">公司家教</option>') &&
+  html.includes('<option value="parttime">兼職</option>') &&
+  html.includes('<option value="fulltime">正職上班</option>') &&
+  html.includes("const CAT_TO_KIND={priv:'tutoring',comp:'tutoring'"));
+check('每筆行程可自訂顏色（覆蓋分類色）',
+  html.includes('id="formColor"') && html.includes('id="formColorOn"') &&
+  html.includes('function textOn(hex)') &&
+  html.includes("color:color") &&
+  html.includes("$('formColorOn').checked?$('formColor').value:null"));
+check('所有類型皆可標出席狀態（含遲到）',
+  html.includes('<label>出席狀態<select id="formStatus">') &&
+  html.includes('<option value="late">遲到</option>') &&
+  html.includes('const statusOff=s=>') &&
+  html.includes('status:status,color:color'));
+check('明確分類欄位可持久化',
+  html.includes("category:(cat==='priv'||cat==='comp')?cat:null") &&
+  html.includes('category:cat'));
 check('兼職班次月曆改用黃色',
   html.includes('--event-bg:#fbe7a2;--event-text:#8a6a12'));
 check('匯入個人班表改為可勾選課程的清單',

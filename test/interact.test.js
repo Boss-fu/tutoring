@@ -160,7 +160,7 @@ const check = (name, cond, extra='') => {
   check('當日明細每筆都能點開修改', !!personalItem);
   personalItem?.dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
   await new Promise(r => setTimeout(r, 80));
-  check('點個人行程開啟編輯器並帶出正確類型', !$('lessonEditor').classList.contains('hide') && $('formKind').value === 'personal' && $('formTitle').value === '桓安高三物理');
+  check('點行程開啟編輯器並帶出正確分類', !$('lessonEditor').classList.contains('hide') && $('formKind').value === 'priv' && $('formTitle').value === '桓安高三物理');
   const addBtnDetail = $('calendarDayDetail')?.querySelector('[data-add-day="2026-08-10"]');
   addBtnDetail?.dispatchEvent(new win.MouseEvent('click', { bubbles:true }));
   await new Promise(r => setTimeout(r, 80));
