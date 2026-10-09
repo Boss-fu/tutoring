@@ -9,9 +9,16 @@ const fromB64url = (value:string) => Uint8Array.from(atob(value.replace(/-/g,'+'
 async function cryptoKey(){return crypto.subtle.importKey('raw',new TextEncoder().encode(env('GMAIL_TOKEN_ENCRYPTION_KEY')).slice(0,32),{name:'AES-GCM'},false,['encrypt','decrypt'])}
 async function encrypt(value:string){const iv=crypto.getRandomValues(new Uint8Array(12)),data=new TextEncoder().encode(value),out=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await cryptoKey(),data));return b64url(new Uint8Array([...iv,...out]))}
 async function decrypt(value:string){const all=fromB64url(value),iv=all.slice(0,12),data=all.slice(12);return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},await cryptoKey(),data))}
-async function tokenRequest(params:Record<string,string>){const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(params)});const data=await r.json();if(!r.ok)throw new Error(data.error_description||data.error||'Google token request failed');return data}
-async function gmail(access:string,path:string){const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/'+path,{headers:{Authorization:`Bearer ${access}`}});const data=await r.json();if(!r.ok)throw new Error(data.error?.message||'Gmail request failed');return data}
-function attachments(part:any, out:any[]=[]){if(part?.filename&&part?.body?.attachmentId&&/\.(pdf|png|jpe?g)$/i.test(part.filename))out.push({id:part.body.attachmentId,name:part.filename,mime:part.mimeType||'application/octet-stream'});for(const child of part?.parts||[])attachments(child,out);return out}
+async function tokenRequest(params:Record<string,string>){const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(params)});const data=await r.json();if(!r.ok)throw Object.assign(new Error(data.error_description||data.error||'Google token request failed'),{googleError:data.error||''});return data}
+async function gmail(access:string,path:string){const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/'+path,{headers:{Authorization:`Bearer ${access}`}});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error?.message||('Gmail request failed ('+r.status+')'));return data}
+// 收集附件：檔名符合副檔名，或 MIME 為 PDF／圖片（即使沒有副檔名也收）。
+function attachments(part:any, out:any[]=[]){
+  const name=part?.filename||'', mime=part?.mimeType||'', id=part?.body?.attachmentId
+  if(id && (/\.(pdf|png|jpe?g|webp|heic|heif)$/i.test(name) || /^application\/pdf$/i.test(mime) || /^image\//i.test(mime)))
+    out.push({id, name: name || ('salary'+(mime.includes('pdf')?'.pdf':'.jpg')), mime: mime||'application/octet-stream'})
+  for(const child of part?.parts||[])attachments(child,out)
+  return out
+}
 
 Deno.serve(async req=>{
   if(req.method==='OPTIONS')return new Response('ok',{headers:cors})
@@ -41,8 +48,11 @@ Deno.serve(async req=>{
       return json({ok:true})
     }
     const {data:conn}=await service.from('gmail_payroll_connections').select('*').eq('user_id',user.id).maybeSingle();if(!conn)return json({error:'gmail_not_connected'},409)
-    const tokens=await tokenRequest({refresh_token:await decrypt(conn.refresh_token_encrypted),client_id:env('GMAIL_CLIENT_ID'),client_secret:env('GMAIL_CLIENT_SECRET'),grant_type:'refresh_token'}),access=tokens.access_token
-    const month=String(body.month||new Date().toISOString().slice(0,7)),[year,mon]=month.split('-').map(Number),after=new Date(year,mon-1,1),before=new Date(year,mon,15),sender=Deno.env.get('PAYROLL_GMAIL_QUERY')||'',query=`after:${Math.floor(after.getTime()/1000)} before:${Math.floor(before.getTime()/1000)} has:attachment ("薪資單" OR "薪資明細") ${sender}`.trim()
+    // refresh token 失效（過期／撤銷）時，要求使用者重新授權，而不是回傳模糊的 400。
+    let access:string
+    try{const tokens=await tokenRequest({refresh_token:await decrypt(conn.refresh_token_encrypted),client_id:env('GMAIL_CLIENT_ID'),client_secret:env('GMAIL_CLIENT_SECRET'),grant_type:'refresh_token'});access=tokens.access_token}
+    catch(e){const ge=(e as any)?.googleError||'';if(ge==='invalid_grant'||ge==='invalid_client'){await service.from('gmail_payroll_connections').delete().eq('user_id',user.id);return json({error:'gmail_not_connected'},409)}throw e}
+    const month=String(body.month||new Date().toISOString().slice(0,7)),[year,mon]=month.split('-').map(Number),after=new Date(year,mon-1,1),before=new Date(year,mon,15),sender=Deno.env.get('PAYROLL_GMAIL_QUERY')||'',query=`after:${Math.floor(after.getTime()/1000)} before:${Math.floor(before.getTime()/1000)} has:attachment ("薪資單" OR "薪資明細" OR "薪資") ${sender}`.trim()
     const list=await gmail(access,'messages?maxResults=20&q='+encodeURIComponent(query));for(const item of list.messages||[]){const msg=await gmail(access,'messages/'+item.id+'?format=full'),files=attachments(msg.payload);for(const file of files){const {data:done}=await service.from('gmail_payroll_imports').select('gmail_message_id').eq('user_id',user.id).eq('gmail_message_id',item.id).eq('attachment_id',file.id).maybeSingle();if(done)continue;const attachment=await gmail(access,`messages/${item.id}/attachments/${file.id}`),headers=Object.fromEntries((msg.payload?.headers||[]).map((h:any)=>[h.name,h.value]));return json({found:true,message_id:item.id,attachment_id:file.id,filename:file.name,mime_type:file.mime,data:attachment.data,subject:headers.Subject||'',from:headers.From||'',date:headers.Date||''})}}
     return json({found:false,message:'目前沒有尚未匯入的薪資單'})
   }catch(error){console.error(error);return json({error:error instanceof Error?error.message:String(error)},500)}
